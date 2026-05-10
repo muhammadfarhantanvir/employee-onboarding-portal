@@ -981,6 +981,196 @@ export const schedulerStatusSchema = {
   },
 };
 
+// ── IT Checklists ─────────────────────────────────
+export const itItemCategoryEnum = ['hardware', 'software', 'access', 'communication', 'security', 'other'];
+export const itItemStatusEnum = ['pending', 'in_progress', 'completed', 'skipped', 'blocked'];
+export const itChecklistStatusEnum = ['pending', 'in_progress', 'completed', 'blocked'];
+
+export const itChecklistTemplateItemSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    templateId: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    title: { type: 'string', example: 'Provision laptop' },
+    description: { type: 'string', nullable: true, example: 'Order and configure MacBook Pro 14"' },
+    category: { type: 'string', enum: itItemCategoryEnum, example: 'hardware' },
+    sortOrder: { type: 'number', example: 0 },
+    isRequired: { type: 'boolean', example: true },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const itChecklistTemplateSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    name: { type: 'string', example: 'Standard IT Onboarding' },
+    description: { type: 'string', nullable: true },
+    isDefault: { type: 'boolean', example: true },
+    createdBy: { type: 'string', format: 'uuid', nullable: true },
+    items: { type: 'array', items: itChecklistTemplateItemSchema },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const itChecklistItemSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    checklistId: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    templateItemId: { type: 'string', format: 'uuid', nullable: true },
+    title: { type: 'string', example: 'Provision laptop' },
+    description: { type: 'string', nullable: true },
+    category: { type: 'string', enum: itItemCategoryEnum, example: 'hardware' },
+    sortOrder: { type: 'number', example: 0 },
+    isRequired: { type: 'boolean', example: true },
+    status: { type: 'string', enum: itItemStatusEnum, example: 'pending' },
+    note: { type: 'string', nullable: true, example: 'Waiting for stock' },
+    assetTag: { type: 'string', nullable: true, example: 'ASSET-0042' },
+    serialNumber: { type: 'string', nullable: true, example: 'C02XK1JFHV2Q' },
+    completedBy: { type: 'string', format: 'uuid', nullable: true },
+    completedAt: { type: 'string', format: 'date-time', nullable: true },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const itChecklistSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    hireId: { type: 'string', format: 'uuid' },
+    templateId: { type: 'string', format: 'uuid', nullable: true },
+    assignedTo: { type: 'string', format: 'uuid', nullable: true },
+    status: { type: 'string', enum: itChecklistStatusEnum, example: 'in_progress' },
+    completionPct: { type: 'number', minimum: 0, maximum: 100, example: 33 },
+    dueDate: { type: 'string', format: 'date', nullable: true },
+    completedAt: { type: 'string', format: 'date-time', nullable: true },
+    notes: { type: 'string', nullable: true },
+    items: { type: 'array', items: itChecklistItemSchema },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const itChecklistListSchema = {
+  type: 'object',
+  properties: {
+    checklists: { type: 'array', items: itChecklistSchema },
+    count: { type: 'number', example: 3 },
+    byStatus: {
+      type: 'object',
+      properties: {
+        pending: { type: 'number', example: 1 },
+        in_progress: { type: 'number', example: 1 },
+        completed: { type: 'number', example: 1 },
+        blocked: { type: 'number', example: 0 },
+      },
+    },
+  },
+};
+
+export const createItTemplateBodySchema = {
+  type: 'object',
+  required: ['name'],
+  properties: {
+    name: { type: 'string', example: 'Standard IT Onboarding' },
+    description: { type: 'string', example: 'Default checklist for all new hires' },
+    isDefault: { type: 'boolean', example: false },
+  },
+};
+
+export const updateItTemplateBodySchema = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', example: 'Standard IT Onboarding v2' },
+    description: { type: 'string' },
+    isDefault: { type: 'boolean' },
+  },
+};
+
+export const createItTemplateItemBodySchema = {
+  type: 'object',
+  required: ['title'],
+  properties: {
+    title: { type: 'string', example: 'Provision laptop' },
+    description: { type: 'string', example: 'Order and configure MacBook Pro 14"' },
+    category: { type: 'string', enum: itItemCategoryEnum, example: 'hardware' },
+    isRequired: { type: 'boolean', example: true },
+  },
+};
+
+export const updateItTemplateItemBodySchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', example: 'Provision laptop' },
+    description: { type: 'string' },
+    category: { type: 'string', enum: itItemCategoryEnum },
+    isRequired: { type: 'boolean' },
+  },
+};
+
+export const reorderItItemsBodySchema = {
+  type: 'object',
+  required: ['itemIds'],
+  properties: {
+    itemIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
+  },
+};
+
+export const createItChecklistBodySchema = {
+  type: 'object',
+  required: ['hireId'],
+  properties: {
+    hireId: { type: 'string', format: 'uuid' },
+    templateId: { type: 'string', format: 'uuid' },
+    assignedTo: { type: 'string', format: 'uuid' },
+    dueDate: { type: 'string', format: 'date', example: '2024-06-01' },
+    notes: { type: 'string', example: 'Priority hire — start date is firm' },
+  },
+};
+
+export const updateItChecklistBodySchema = {
+  type: 'object',
+  properties: {
+    assignedTo: { type: 'string', format: 'uuid' },
+    dueDate: { type: 'string', format: 'date' },
+    notes: { type: 'string' },
+    status: { type: 'string', enum: itChecklistStatusEnum },
+  },
+};
+
+export const updateItChecklistItemBodySchema = {
+  type: 'object',
+  properties: {
+    status: { type: 'string', enum: itItemStatusEnum },
+    note: { type: 'string', example: 'Waiting for stock from supplier' },
+    assetTag: { type: 'string', example: 'ASSET-0042' },
+    serialNumber: { type: 'string', example: 'C02XK1JFHV2Q' },
+  },
+};
+
+export const completeItItemBodySchema = {
+  type: 'object',
+  properties: {
+    note: { type: 'string', example: 'Configured and handed over to hire' },
+    assetTag: { type: 'string', example: 'ASSET-0042' },
+    serialNumber: { type: 'string', example: 'C02XK1JFHV2Q' },
+  },
+};
+
+export const blockItItemBodySchema = {
+  type: 'object',
+  properties: {
+    note: { type: 'string', example: 'Waiting for desk allocation from facilities' },
+  },
+};
+
 // ── Analytics ────────────────────────────────────
 export const analyticsOverviewSchema = {
   type: 'object',

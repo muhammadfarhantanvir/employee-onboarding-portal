@@ -10,6 +10,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { DocumentsModule } from './documents/documents.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ItChecklistModule } from './it-checklist/it-checklist.module';
 import { TenantContextMiddleware } from './common/middleware/tenant-context.middleware';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { PermissionsGuard } from './common/rbac/permissions.guard';
@@ -29,6 +30,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     DocumentsModule,
     AnalyticsModule,
     NotificationsModule,
+    ItChecklistModule,
   ],
   controllers: [AppController],
   providers: [
