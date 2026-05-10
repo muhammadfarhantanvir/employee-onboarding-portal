@@ -312,3 +312,148 @@ export const transferOwnershipBodySchema = {
     newOwnerUserId: { type: 'string', format: 'uuid' },
   },
 };
+
+// ── Onboarding Templates ─────────────────────────
+export const templateTaskSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    title: { type: 'string', example: 'Setup Workstation' },
+    description: { type: 'string', example: 'Detailed instructions for IT' },
+    taskType: { type: 'string', enum: ['checkbox', 'document_upload', 'acknowledgement', 'form', 'meeting'] },
+    phase: { type: 'string', enum: ['pre_boarding', 'week_1', 'month_1', 'month_3'] },
+    assignedRole: { type: 'string', enum: ['hr_admin', 'manager', 'it_admin', 'new_hire'] },
+    dueDayOffset: { type: 'number', example: 0 },
+    sortOrder: { type: 'number', example: 0 },
+    isRequired: { type: 'boolean', example: true },
+  },
+};
+
+export const onboardingTemplateSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    name: { type: 'string', example: 'Software Engineer' },
+    description: { type: 'string', example: 'Standard onboarding for devs' },
+    department: { type: 'string', example: 'Engineering' },
+    isDefault: { type: 'boolean', example: false },
+    tasks: { type: 'array', items: templateTaskSchema },
+  },
+};
+
+export const createTemplateBodySchema = {
+  type: 'object',
+  required: ['name'],
+  properties: {
+    name: { type: 'string', example: 'Software Engineer' },
+    description: { type: 'string', example: 'Standard onboarding for devs' },
+    department: { type: 'string', example: 'Engineering' },
+  },
+};
+
+export const updateTemplateBodySchema = createTemplateBodySchema;
+
+export const createTemplateTaskBodySchema = {
+  type: 'object',
+  required: ['title', 'taskType', 'phase'],
+  properties: {
+    title: { type: 'string', example: 'Setup Workstation' },
+    description: { type: 'string', example: 'Detailed instructions for IT' },
+    taskType: { type: 'string', enum: ['checkbox', 'document_upload', 'acknowledgement', 'form', 'meeting'] },
+    phase: { type: 'string', enum: ['pre_boarding', 'week_1', 'month_1', 'month_3'] },
+    assignedRole: { type: 'string', enum: ['hr_admin', 'manager', 'it_admin', 'new_hire'] },
+    dueDayOffset: { type: 'number', example: 0 },
+  },
+};
+
+export const updateTemplateTaskBodySchema = createTemplateTaskBodySchema;
+
+export const reorderTasksBodySchema = {
+  type: 'object',
+  required: ['taskIds'],
+  properties: {
+    taskIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
+  },
+};
+
+// ── Hires ────────────────────────────────────────
+export const hireSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    fullName: { type: 'string', example: 'Nina Newhire' },
+    email: { type: 'string', example: 'newhire@demo-company.com' },
+    jobTitle: { type: 'string', example: 'Frontend Dev' },
+    department: { type: 'string', example: 'Engineering' },
+    startDate: { type: 'string', format: 'date', example: '2024-06-01' },
+    status: { type: 'string', enum: ['pending_invite', 'in_progress', 'at_risk', 'completed', 'cancelled'] },
+    completionPct: { type: 'number', example: 45 },
+    managerId: { type: 'string', format: 'uuid', nullable: true },
+    templateId: { type: 'string', format: 'uuid', nullable: true },
+  },
+};
+
+export const createHireBodySchema = {
+  type: 'object',
+  required: ['fullName', 'email', 'startDate'],
+  properties: {
+    fullName: { type: 'string', example: 'Nina Newhire' },
+    email: { type: 'string', example: 'newhire@demo-company.com' },
+    startDate: { type: 'string', format: 'date', example: '2024-06-01' },
+    jobTitle: { type: 'string', example: 'Frontend Dev' },
+    department: { type: 'string', example: 'Engineering' },
+    managerId: { type: 'string', format: 'uuid' },
+    templateId: { type: 'string', format: 'uuid' },
+  },
+};
+
+// ── Hire Tasks ───────────────────────────────────
+export const hireTaskSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    title: { type: 'string', example: 'Setup Slack' },
+    status: { type: 'string', enum: ['pending', 'in_progress', 'completed', 'skipped', 'blocked'] },
+    dueDate: { type: 'string', format: 'date' },
+    assignedTo: { type: 'string', format: 'uuid' },
+    completedAt: { type: 'string', format: 'date-time', nullable: true },
+  },
+};
+
+// ── Documents ────────────────────────────────────
+export const documentSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    name: { type: 'string', example: 'Employment_Contract.pdf' },
+    category: { type: 'string', enum: ['policy', 'contract', 'training', 'personal_id', 'tax_form', 'other'] },
+    status: { type: 'string', enum: ['pending_review', 'approved', 'rejected', 'superseded'] },
+    fileSize: { type: 'number', example: 1024567 },
+    mimeType: { type: 'string', example: 'application/pdf' },
+    uploadedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+// ── Analytics ────────────────────────────────────
+export const analyticsOverviewSchema = {
+  type: 'object',
+  properties: {
+    activeHires: { type: 'number', example: 12 },
+    completionRate: { type: 'number', example: 84 },
+    atRiskHires: { type: 'number', example: 2 },
+    pendingDocuments: { type: 'number', example: 5 },
+  },
+};
+
+// ── Notifications ────────────────────────────────
+export const notificationSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    type: { type: 'string', example: 'task_assigned' },
+    title: { type: 'string', example: 'New task assigned' },
+    body: { type: 'string', example: 'Please sign the NDA' },
+    isRead: { type: 'boolean', example: false },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};

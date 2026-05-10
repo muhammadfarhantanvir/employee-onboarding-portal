@@ -25,10 +25,12 @@ import {
 import { CompanyService } from './company.service';
 import { CompanyId } from '../common/decorators/company-id.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Roles } from '../common/decorators/roles.decorator';
 import { CompanyGuard } from '../common/guards/company.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
+import {
+  Permission,
+  RequirePermissions,
+} from '../common/rbac';
 import {
   billingSchema,
   companySchema,
@@ -44,7 +46,7 @@ import {
   verifyDomainBodySchema,
   workspaceAvailabilitySchema,
 } from '../common/swagger.schemas';
-import { AuthenticatedUser, Role } from '../workspace/workspace.types';
+import { AuthenticatedUser } from '../workspace/workspace.types';
 
 @ApiTags('Company')
 @Controller('company')
@@ -84,7 +86,7 @@ export class CompanyPublicController {
 @ApiForbiddenResponse({
   description: 'Token tenant, subdomain, or role is not allowed',
 })
-@UseGuards(JwtAuthGuard, CompanyGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, CompanyGuard)
 @Controller('company')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
@@ -109,7 +111,7 @@ export class CompanyController {
       properties: { company: companySchema },
     },
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_COMPANY_SETTINGS)
   @Patch()
   updateCompany(
     @CompanyId() companyId: string,
@@ -125,7 +127,7 @@ export class CompanyController {
   @ApiConflictResponse({
     description: 'The requested domain is already registered',
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_COMPANY_SETTINGS)
   @Post('domain/verification')
   requestDomainVerification(
     @CompanyId() companyId: string,
@@ -145,7 +147,7 @@ export class CompanyController {
   @ApiConflictResponse({
     description: 'No pending challenge, expired challenge, or invalid token',
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_COMPANY_SETTINGS)
   @Post('domain/verify')
   verifyDomain(@CompanyId() companyId: string, @Body() body: unknown) {
     return this.companyService.verifyDomain(companyId, body);
@@ -159,7 +161,7 @@ export class CompanyController {
       properties: { company: companySchema },
     },
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_COMPANY_SETTINGS)
   @Post('logo')
   updateLogo(@CompanyId() companyId: string, @Body() body: unknown) {
     return this.companyService.updateLogo(companyId, body);
@@ -177,7 +179,7 @@ export class CompanyController {
       },
     },
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_TEAM_MEMBERS)
   @Get('members')
   listMembers(@CompanyId() companyId: string) {
     return this.companyService.listMembers(companyId);
@@ -206,7 +208,7 @@ export class CompanyController {
       },
     },
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_COMPANY_SETTINGS)
   @Patch('billing')
   updateBillingPlan(@CompanyId() companyId: string, @Body() body: unknown) {
     return this.companyService.updateBillingPlan(companyId, body);
@@ -224,7 +226,7 @@ export class CompanyController {
       },
     },
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_TEAM_MEMBERS)
   @Post('members/invite')
   inviteMember(
     @CompanyId() companyId: string,
@@ -244,7 +246,7 @@ export class CompanyController {
     },
   })
   @ApiNotFoundResponse({ description: 'Member was not found in this company' })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_TEAM_MEMBERS)
   @Patch('members/:userId/role')
   changeMemberRole(
     @CompanyId() companyId: string,
@@ -263,7 +265,7 @@ export class CompanyController {
     },
   })
   @ApiNotFoundResponse({ description: 'Member was not found in this company' })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_TEAM_MEMBERS)
   @Delete('members/:userId')
   deactivateMember(
     @CompanyId() companyId: string,
@@ -284,7 +286,7 @@ export class CompanyController {
       },
     },
   })
-  @Roles(Role.HR_ADMIN)
+  @RequirePermissions(Permission.MANAGE_COMPANY_SETTINGS)
   @Patch('owner')
   transferOwnership(
     @CompanyId() companyId: string,
@@ -294,3 +296,4 @@ export class CompanyController {
     return this.companyService.transferOwnership(companyId, user, body);
   }
 }
+

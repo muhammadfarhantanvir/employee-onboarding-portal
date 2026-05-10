@@ -9,7 +9,8 @@
     "type-check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "next": "^14.2.5",
+    "@nestjs/core": "11.1.19",
+    "next": "^16.2.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

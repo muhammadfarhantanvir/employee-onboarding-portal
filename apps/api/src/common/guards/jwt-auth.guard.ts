@@ -93,7 +93,7 @@ export class JwtAuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync<AccessTokenPayload>(
         token,
         {
-          secret: process.env.JWT_SECRET ?? 'dev-jwt-secret',
+          secret: process.env.JWT_SECRET,
         },
       );
       if (payload.type === 'refresh') {

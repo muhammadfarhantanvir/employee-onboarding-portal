@@ -31,6 +31,7 @@ import {
   Role,
   WorkspaceAvailabilityResponse,
 } from '../workspace/workspace.types';
+import { hasPermission, Permission } from '../common/rbac';
 
 @Injectable()
 export class CompanyService {
@@ -90,6 +91,12 @@ export class CompanyService {
     user: AuthenticatedUser,
     bodyValue: unknown,
   ): { company: CompanyResponse } {
+    if (!hasPermission(user.role, Permission.MANAGE_COMPANY_SETTINGS)) {
+      throw new ForbiddenException(
+        'Insufficient permissions to manage company settings',
+      );
+    }
+
     const body = requireBody(bodyValue);
     const updates = {
       name: readOptionalString(body, 'name', { min: 2, max: 200 }),
@@ -212,6 +219,12 @@ export class CompanyService {
     inviteToken: string;
     expiresAt: string;
   } {
+    if (!hasPermission(user.role, Permission.MANAGE_TEAM_MEMBERS)) {
+      throw new ForbiddenException(
+        'Insufficient permissions to invite company members',
+      );
+    }
+
     const body = requireBody(bodyValue);
     const email = normalizeEmail(readRequiredString(body, 'email', { max: 255 }));
     const fullName = readRequiredString(body, 'fullName', {
@@ -294,6 +307,12 @@ export class CompanyService {
     company: CompanyResponse;
     owner: MemberResponse;
   } {
+    if (!hasPermission(currentUser.role, Permission.MANAGE_COMPANY_SETTINGS)) {
+      throw new ForbiddenException(
+        'Insufficient permissions to transfer company ownership',
+      );
+    }
+
     const company = this.workspaceStore.requireCompany(companyId);
     if (company.ownerUserId !== currentUser.id) {
       throw new ForbiddenException('Only the current owner can transfer ownership');

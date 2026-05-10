@@ -8,7 +8,7 @@ async function bootstrap(): Promise<void> {
 
   app.enableCors({
     origin: [
-      process.env.FRONTEND_URL ?? 'http://localhost:3000',
+      process.env.FRONTEND_URL as string,
       'http://localhost:3001',
     ],
     credentials: true,
