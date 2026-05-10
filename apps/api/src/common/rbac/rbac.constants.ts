@@ -42,6 +42,11 @@ export enum Permission {
   // Company Management
   MANAGE_COMPANY_SETTINGS = 'manage_company_settings',
   MANAGE_TEAM_MEMBERS = 'manage_team_members',
+
+  // GDPR
+  MANAGE_GDPR = 'manage_gdpr',
+  VIEW_DATA_ACCESS_LOG = 'view_data_access_log',
+  REQUEST_DATA_ERASURE = 'request_data_erasure',
 }
 
 /**
@@ -79,6 +84,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     // Company
     Permission.MANAGE_COMPANY_SETTINGS,
     Permission.MANAGE_TEAM_MEMBERS,
+
+    // GDPR
+    Permission.MANAGE_GDPR,
+    Permission.VIEW_DATA_ACCESS_LOG,
   ],
 
   [Role.MANAGER]: [
@@ -122,6 +131,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 
     // Hires
     Permission.VIEW_OWN_HIRE,
+
+    // GDPR — new hire can request their own data erasure
+    Permission.REQUEST_DATA_ERASURE,
   ],
 
   [Role.VIEWER]: [

@@ -1450,3 +1450,170 @@ export const realtimeConfigSchema = {
     description: { type: 'string', example: 'Subscribe to these tables via Supabase Realtime for live dashboard updates' },
   },
 };
+
+// ── GDPR ─────────────────────────────────────────
+export const dataAccessLogEntrySchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    userId: { type: 'string', format: 'uuid', nullable: true },
+    action: {
+      type: 'string',
+      enum: [
+        'document.viewed', 'document.downloaded', 'document.uploaded',
+        'document.approved', 'document.rejected', 'document.deleted',
+        'hire.viewed', 'hire.exported', 'hire.anonymised',
+        'data.exported', 'data.erasure_requested', 'data.erased',
+      ],
+      example: 'document.viewed',
+    },
+    entityType: { type: 'string', example: 'document' },
+    entityId: { type: 'string', format: 'uuid', nullable: true },
+    ipAddress: { type: 'string', nullable: true, example: '192.168.1.10' },
+    userAgent: { type: 'string', nullable: true },
+    metadata: { type: 'object', additionalProperties: true },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const dataAccessLogListSchema = {
+  type: 'object',
+  properties: {
+    entries: { type: 'array', items: dataAccessLogEntrySchema },
+    count: { type: 'number', example: 42 },
+  },
+};
+
+export const erasureRequestSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    hireId: { type: 'string', format: 'uuid', nullable: true },
+    requestedBy: { type: 'string', format: 'uuid', nullable: true },
+    reason: { type: 'string', nullable: true, example: 'Employee has left the company' },
+    status: { type: 'string', enum: ['pending', 'in_progress', 'completed', 'rejected'], example: 'pending' },
+    processedBy: { type: 'string', format: 'uuid', nullable: true },
+    processedAt: { type: 'string', format: 'date-time', nullable: true },
+    notes: { type: 'string', nullable: true },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const createErasureRequestBodySchema = {
+  type: 'object',
+  properties: {
+    hireId: { type: 'string', format: 'uuid' },
+    reason: { type: 'string', example: 'Employee has left the company and requested data deletion' },
+  },
+};
+
+export const processErasureBodySchema = {
+  type: 'object',
+  required: ['status'],
+  properties: {
+    status: { type: 'string', enum: ['in_progress', 'completed', 'rejected'] },
+    notes: { type: 'string', example: 'Data anonymised. Documents deleted from storage.' },
+  },
+};
+
+export const privacyPolicySchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    version: { type: 'string', example: '2.0' },
+    effectiveAt: { type: 'string', format: 'date', example: '2024-01-01' },
+    contentUrl: { type: 'string', nullable: true, example: 'https://company.com/privacy-policy-v2' },
+    isCurrent: { type: 'boolean', example: true },
+    createdBy: { type: 'string', format: 'uuid', nullable: true },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const createPrivacyPolicyBodySchema = {
+  type: 'object',
+  required: ['version', 'effectiveAt'],
+  properties: {
+    version: { type: 'string', example: '3.0' },
+    effectiveAt: { type: 'string', format: 'date', example: '2025-01-01' },
+    contentUrl: { type: 'string', example: 'https://company.com/privacy-policy-v3' },
+  },
+};
+
+export const privacyPolicyAckSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    policyId: { type: 'string', format: 'uuid' },
+    userId: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    ackedAt: { type: 'string', format: 'date-time' },
+    ipAddress: { type: 'string', nullable: true },
+  },
+};
+
+export const dataExportSchema = {
+  type: 'object',
+  properties: {
+    exportedAt: { type: 'string', format: 'date-time' },
+    companyId: { type: 'string', format: 'uuid' },
+    hireId: { type: 'string', format: 'uuid' },
+    hire: { type: 'object', additionalProperties: true },
+    tasks: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    documents: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    notifications: { type: 'array', items: { type: 'object', additionalProperties: true } },
+    accessLog: { type: 'array', items: dataAccessLogEntrySchema },
+  },
+};
+
+export const anonymisationResultSchema = {
+  type: 'object',
+  properties: {
+    success: { type: 'boolean', example: true },
+    hireId: { type: 'string', format: 'uuid' },
+    fieldsAnonymised: { type: 'array', items: { type: 'string' }, example: ['fullName', 'email', 'notes', 'documents'] },
+    documentsDeleted: { type: 'number', example: 3 },
+    anonymisedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const expiredDocumentsSchema = {
+  type: 'object',
+  properties: {
+    documents: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          category: { type: 'string' },
+          retentionUntil: { type: 'string', format: 'date' },
+          hireId: { type: 'string', format: 'uuid', nullable: true },
+        },
+      },
+    },
+    count: { type: 'number', example: 2 },
+  },
+};
+
+export const logAccessBodySchema = {
+  type: 'object',
+  required: ['action', 'entityType'],
+  properties: {
+    action: {
+      type: 'string',
+      enum: [
+        'document.viewed', 'document.downloaded', 'document.uploaded',
+        'document.approved', 'document.rejected', 'document.deleted',
+        'hire.viewed', 'hire.exported', 'hire.anonymised',
+        'data.exported', 'data.erasure_requested', 'data.erased',
+      ],
+    },
+    entityType: { type: 'string', example: 'document' },
+    entityId: { type: 'string', format: 'uuid' },
+    metadata: { type: 'object', additionalProperties: true },
+  },
+};

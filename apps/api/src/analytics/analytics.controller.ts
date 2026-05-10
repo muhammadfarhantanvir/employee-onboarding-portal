@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Res, Param } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -9,6 +9,8 @@ import {
   ApiTooManyRequestsResponse,
   ApiInternalServerErrorResponse,
   ApiQuery,
+  ApiParam,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CompanyGuard } from '../common/guards/company.guard';
@@ -20,12 +22,16 @@ import {
   departmentCompletionSchema,
   phaseTimeRowSchema,
   overdueTasksResponseSchema,
+  overdueTaskRowSchema,
   documentReviewQueueSchema,
   hireCohortPointSchema,
   realtimeConfigSchema,
+  hireSchema,
+  notFoundSchema,
   tooManyRequestsSchema,
   internalErrorSchema,
-} from '../common/swagger.schemas';import { AnalyticsService } from './analytics.service';
+} from '../common/swagger.schemas';
+import { AnalyticsService } from './analytics.service';
 
 const UNAUTHORIZED = {
   description: '401 — Missing or invalid bearer token',
@@ -202,5 +208,97 @@ export class AnalyticsController {
         notifications: ['INSERT'],
       },
     };
+  }
+
+  // ── GET /analytics/export/hires ────────────────────────────────
+
+  @ApiOperation({
+    summary: 'Export all hires as CSV',
+    description:
+      'Downloads a CSV file with all hires including task counts, completion %, ' +
+      'and overdue task count. Suitable for Excel / Google Sheets import.',
+  })
+  @ApiOkResponse({
+    description: '200 — CSV file returned',
+    schema: { type: 'string', example: 'ID,Full Name,Email,...' },
+  })
+  @RequirePermissions(Permission.EXPORT_ANALYTICS)
+  @Get('export/hires')
+  exportHiresCsv(
+    @CompanyId() companyId: string,
+    @Res() res: Response,
+  ) {
+    const csv = this.analyticsService.exportHiresCsv(companyId);
+    const filename = `hires-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    (res as any).setHeader('Content-Type', 'text/csv');
+    (res as any).setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    (res as any).send(csv);
+  }
+
+  // ── GET /analytics/export/tasks ────────────────────────────────
+
+  @ApiOperation({
+    summary: 'Export all hire tasks as CSV',
+    description:
+      'Downloads a CSV file with every task across all hires — ' +
+      'phase, type, status, due date, assigned role.',
+  })
+  @ApiOkResponse({
+    description: '200 — CSV file returned',
+    schema: { type: 'string', example: 'Hire ID,Hire Name,Task ID,...' },
+  })
+  @RequirePermissions(Permission.EXPORT_ANALYTICS)
+  @Get('export/tasks')
+  exportTasksCsv(
+    @CompanyId() companyId: string,
+    @Res() res: Response,
+  ) {
+    const csv = this.analyticsService.exportTasksCsv(companyId);
+    const filename = `tasks-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    (res as any).setHeader('Content-Type', 'text/csv');
+    (res as any).setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    (res as any).send(csv);
+  }
+
+  // ── GET /analytics/report/hire/:hireId ─────────────────────────
+
+  @ApiOperation({
+    summary: 'Per-hire summary report (JSON)',
+    description:
+      'Returns a structured JSON report for a single hire: ' +
+      'task summary, phase breakdown, overdue tasks, and timeline. ' +
+      'The frontend renders this as a printable PDF summary.',
+  })
+  @ApiParam({ name: 'hireId', format: 'uuid', description: 'Hire ID' })
+  @ApiOkResponse({
+    description: '200 — Hire summary report returned',
+    schema: {
+      type: 'object',
+      properties: {
+        generatedAt: { type: 'string', format: 'date-time' },
+        hire: hireSchema,
+        summary: {
+          type: 'object',
+          properties: {
+            totalTasks: { type: 'number' },
+            completedTasks: { type: 'number' },
+            pendingTasks: { type: 'number' },
+            overdueTaskCount: { type: 'number' },
+            completionPct: { type: 'number' },
+          },
+        },
+        phaseBreakdown: { type: 'array', items: phaseTimeRowSchema },
+        overdueTasks: { type: 'array', items: overdueTaskRowSchema },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: '404 — Hire not found', schema: notFoundSchema })
+  @RequirePermissions(Permission.VIEW_ANALYTICS)
+  @Get('report/hire/:hireId')
+  getHireSummaryReport(
+    @CompanyId() companyId: string,
+    @Param('hireId') hireId: string,
+  ) {
+    return this.analyticsService.getHireSummaryReport(companyId, hireId);
   }
 }

@@ -373,4 +373,141 @@ export class AnalyticsService {
 
     return points;
   }
+
+  // ── CSV Export ─────────────────────────────────────────────────
+
+  exportHiresCsv(companyId: string): string {
+    const { hires } = this.hiresService.listHires(companyId);
+    const today = new Date().toISOString().slice(0, 10);
+
+    const headers = [
+      'ID', 'Full Name', 'Email', 'Job Title', 'Department',
+      'Start Date', 'Status', 'Completion %',
+      'Invited At', 'Started At', 'Completed At',
+      'Total Tasks', 'Completed Tasks', 'Overdue Tasks',
+    ];
+
+    const rows = hires.map((hire) => {
+      const { tasks } = this.hiresService.listHireTasks(hire.id);
+      const completedTasks = tasks.filter((t) => t.status === 'completed').length;
+      const overdueTasks = tasks.filter(
+        (t) => t.status === 'pending' && t.dueDate && t.dueDate < today && t.isRequired,
+      ).length;
+
+      return [
+        hire.id,
+        `"${hire.fullName}"`,
+        hire.email,
+        `"${hire.jobTitle ?? ''}"`,
+        `"${hire.department ?? ''}"`,
+        hire.startDate,
+        hire.status,
+        hire.completionPct,
+        hire.invitedAt ?? '',
+        hire.startedAt ?? '',
+        hire.completedAt ?? '',
+        tasks.length,
+        completedTasks,
+        overdueTasks,
+      ].join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+  }
+
+  exportTasksCsv(companyId: string): string {
+    const { hires } = this.hiresService.listHires(companyId);
+
+    const headers = [
+      'Hire ID', 'Hire Name', 'Task ID', 'Task Title',
+      'Phase', 'Task Type', 'Assigned Role',
+      'Due Date', 'Status', 'Is Required',
+      'Completed At',
+    ];
+
+    const rows: string[] = [];
+    for (const hire of hires) {
+      const { tasks } = this.hiresService.listHireTasks(hire.id);
+      for (const task of tasks) {
+        rows.push([
+          hire.id,
+          `"${hire.fullName}"`,
+          task.id,
+          `"${task.title}"`,
+          task.phase,
+          task.taskType,
+          task.assignedRole,
+          task.dueDate ?? '',
+          task.status,
+          task.isRequired,
+          task.completedAt ?? '',
+        ].join(','));
+      }
+    }
+
+    return [headers.join(','), ...rows].join('\n');
+  }
+
+  // ── Per-hire summary report (JSON) ────────────────────────────
+
+  getHireSummaryReport(companyId: string, hireId: string) {
+    const hire = this.hiresService.getHire(companyId, hireId);
+    const { tasks, byPhase, byStatus, completionPct } =
+      this.hiresService.listHireTasks(hireId);
+    const today = new Date().toISOString().slice(0, 10);
+
+    const overdueTasks = tasks.filter(
+      (t) => t.status === 'pending' && t.dueDate && t.dueDate < today && t.isRequired,
+    );
+
+    const phaseBreakdown = PHASES.map((phase) => {
+      const phaseTasks = tasks.filter((t) => t.phase === phase);
+      return {
+        phase,
+        total: phaseTasks.length,
+        completed: phaseTasks.filter((t) => t.status === 'completed').length,
+        pending: phaseTasks.filter((t) => t.status === 'pending').length,
+        overdue: phaseTasks.filter(
+          (t) => t.status === 'pending' && t.dueDate && t.dueDate < today,
+        ).length,
+      };
+    });
+
+    return {
+      generatedAt: new Date().toISOString(),
+      hire: {
+        id: hire.id,
+        fullName: hire.fullName,
+        email: hire.email,
+        jobTitle: hire.jobTitle,
+        department: hire.department,
+        startDate: hire.startDate,
+        status: hire.status,
+        completionPct,
+        invitedAt: hire.invitedAt,
+        startedAt: hire.startedAt,
+        completedAt: hire.completedAt,
+      },
+      summary: {
+        totalTasks: tasks.length,
+        completedTasks: byStatus.completed,
+        pendingTasks: byStatus.pending,
+        skippedTasks: byStatus.skipped,
+        blockedTasks: byStatus.blocked,
+        overdueTaskCount: overdueTasks.length,
+        completionPct,
+      },
+      phaseBreakdown,
+      overdueTasks: overdueTasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        phase: t.phase,
+        dueDate: t.dueDate,
+        assignedRole: t.assignedRole,
+        daysOverdue: t.dueDate
+          ? Math.ceil((Date.now() - new Date(t.dueDate).getTime()) / 86400000)
+          : 0,
+      })),
+    };
+  }
 }
