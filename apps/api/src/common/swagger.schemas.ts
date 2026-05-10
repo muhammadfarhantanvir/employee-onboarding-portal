@@ -1297,9 +1297,156 @@ export const requestReuploadBodySchema = {
 export const analyticsOverviewSchema = {
   type: 'object',
   properties: {
-    activeHires: { type: 'number', example: 12 },
-    completionRate: { type: 'number', example: 84 },
-    atRiskHires: { type: 'number', example: 2 },
-    pendingDocuments: { type: 'number', example: 5 },
+    activeHires: { type: 'number', example: 2 },
+    atRiskHires: { type: 'number', example: 1 },
+    pendingInvites: { type: 'number', example: 1 },
+    completedThisMonth: { type: 'number', example: 0 },
+    avgCompletionPct: { type: 'number', example: 33 },
+    completionRate: { type: 'number', example: 0 },
+    pendingDocuments: { type: 'number', example: 2 },
+    overdueTaskCount: { type: 'number', example: 1 },
+    refreshedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const hirePhaseProgressSchema = {
+  type: 'object',
+  properties: {
+    pre_boarding: { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' } } },
+    week_1:       { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' } } },
+    month_1:      { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' } } },
+    month_3:      { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' } } },
+  },
+};
+
+export const activeHireRowSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    fullName: { type: 'string', example: 'Nina Newhire' },
+    email: { type: 'string', example: 'newhire@demo-company.com' },
+    jobTitle: { type: 'string', nullable: true },
+    department: { type: 'string', nullable: true },
+    startDate: { type: 'string', format: 'date' },
+    status: { type: 'string', enum: ['pending_invite', 'in_progress', 'at_risk', 'completed', 'cancelled'] },
+    completionPct: { type: 'number', example: 33 },
+    daysActive: { type: 'number', example: 3, description: 'Days since start date' },
+    daysRemaining: { type: 'number', nullable: true, example: 5, description: 'Days until latest pending task due date' },
+    overdueTaskCount: { type: 'number', example: 1 },
+    pendingTaskCount: { type: 'number', example: 4 },
+    completedTaskCount: { type: 'number', example: 2 },
+    totalTaskCount: { type: 'number', example: 6 },
+    managerId: { type: 'string', format: 'uuid', nullable: true },
+    phaseProgress: hirePhaseProgressSchema,
+  },
+};
+
+export const activeHiresResponseSchema = {
+  type: 'object',
+  properties: {
+    hires: { type: 'array', items: activeHireRowSchema },
+    count: { type: 'number', example: 2 },
+    byStatus: {
+      type: 'object',
+      properties: {
+        pending_invite: { type: 'number', example: 1 },
+        in_progress: { type: 'number', example: 1 },
+        at_risk: { type: 'number', example: 0 },
+        completed: { type: 'number', example: 0 },
+        cancelled: { type: 'number', example: 0 },
+      },
+    },
+  },
+};
+
+export const departmentCompletionSchema = {
+  type: 'object',
+  properties: {
+    department: { type: 'string', example: 'Engineering' },
+    totalHires: { type: 'number', example: 3 },
+    completedHires: { type: 'number', example: 1 },
+    completionRate: { type: 'number', example: 33 },
+    avgCompletionPct: { type: 'number', example: 55 },
+    atRiskCount: { type: 'number', example: 1 },
+  },
+};
+
+export const phaseTimeRowSchema = {
+  type: 'object',
+  properties: {
+    phase: { type: 'string', enum: ['pre_boarding', 'week_1', 'month_1', 'month_3'] },
+    avgDaysToComplete: { type: 'number', nullable: true, example: 5 },
+    completedCount: { type: 'number', example: 2 },
+    pendingCount: { type: 'number', example: 4 },
+    overdueCount: { type: 'number', example: 1 },
+  },
+};
+
+export const overdueTaskRowSchema = {
+  type: 'object',
+  properties: {
+    taskId: { type: 'string', format: 'uuid' },
+    taskTitle: { type: 'string', example: 'Sign employment contract' },
+    hireId: { type: 'string', format: 'uuid' },
+    hireFullName: { type: 'string', example: 'Nina Newhire' },
+    hireDepartment: { type: 'string', nullable: true },
+    phase: { type: 'string', enum: ['pre_boarding', 'week_1', 'month_1', 'month_3'] },
+    assignedRole: { type: 'string', example: 'new_hire' },
+    dueDate: { type: 'string', format: 'date' },
+    daysOverdue: { type: 'number', example: 2 },
+  },
+};
+
+export const overdueTasksResponseSchema = {
+  type: 'object',
+  properties: {
+    tasks: { type: 'array', items: overdueTaskRowSchema },
+    count: { type: 'number', example: 1 },
+  },
+};
+
+export const pendingDocumentRowSchema = {
+  type: 'object',
+  properties: {
+    documentId: { type: 'string', format: 'uuid' },
+    documentName: { type: 'string', example: 'Employment Contract — Nina Newhire' },
+    category: { type: 'string', example: 'contract' },
+    hireId: { type: 'string', format: 'uuid', nullable: true },
+    hireFullName: { type: 'string', nullable: true, example: 'Nina Newhire' },
+    uploadedAt: { type: 'string', format: 'date-time' },
+    daysWaiting: { type: 'number', example: 1 },
+    isCompanyDoc: { type: 'boolean', example: false },
+  },
+};
+
+export const documentReviewQueueSchema = {
+  type: 'object',
+  properties: {
+    documents: { type: 'array', items: pendingDocumentRowSchema },
+    count: { type: 'number', example: 2 },
+  },
+};
+
+export const hireCohortPointSchema = {
+  type: 'object',
+  properties: {
+    month: { type: 'string', example: '2024-06' },
+    invited: { type: 'number', example: 3 },
+    completed: { type: 'number', example: 1 },
+    atRisk: { type: 'number', example: 0 },
+  },
+};
+
+export const realtimeConfigSchema = {
+  type: 'object',
+  properties: {
+    supabaseUrl: { type: 'string', example: 'https://cfhrgvierfocpkkzergb.supabase.co' },
+    tables: {
+      type: 'array',
+      items: { type: 'string' },
+      example: ['hires', 'hire_tasks', 'documents', 'notifications'],
+    },
+    channel: { type: 'string', example: 'hr-dashboard' },
+    description: { type: 'string', example: 'Subscribe to these tables via Supabase Realtime for live dashboard updates' },
   },
 };
