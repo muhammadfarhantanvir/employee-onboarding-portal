@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -80,7 +80,7 @@ import { HiresService } from './hires.service';
   description: '500 — Unexpected server error',
   schema: internalErrorSchema,
 })
-@UseGuards(JwtAuthGuard, CompanyGuard)
+@UseGuards(CompanyGuard)
 @Controller('hires')
 export class HiresController {
   constructor(private readonly hiresService: HiresService) {}

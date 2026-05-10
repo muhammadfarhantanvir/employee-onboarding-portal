@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { getSession } from '@/lib/api';
+import { apiFetch } from '@/lib/use-api';
 import { createClient } from '@/utils/supabase/client';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
@@ -94,21 +95,6 @@ const PHASE_LABELS: Record<string, string> = {
   month_1: 'Month 1',
   month_3: 'Month 3',
 };
-
-// ── API helpers ────────────────────────────────────────────────
-
-async function apiFetch<T>(path: string): Promise<T> {
-  const session = getSession();
-  if (!session) throw new Error('Not authenticated');
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      'X-Company-Slug': session.companySlug,
-    },
-  });
-  if (!res.ok) throw new Error(`Failed: ${res.status}`);
-  return res.json();
-}
 
 // ── Sub-components ─────────────────────────────────────────────
 
@@ -202,34 +188,37 @@ export default function HiresPage() {
     const session = getSession();
     if (!session) return;
 
-    const supabase = createClient();
+    // Only attempt Realtime if Supabase URL is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl || supabaseUrl.includes('your-project')) return;
 
-    // Subscribe to hires + hire_tasks changes for live progress updates
-    const channel = supabase
-      .channel('hr-dashboard')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'hires' },
-        () => { void loadAll(); },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'hire_tasks' },
-        () => { void loadAll(); },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'documents' },
-        () => { void loadAll(); },
-      )
-      .subscribe((status) => {
-        setRealtimeConnected(status === 'SUBSCRIBED');
-      });
+    let channel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 
-    channelRef.current = channel;
+    try {
+      const supabase = createClient();
+      channel = supabase
+        .channel('hr-dashboard')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'hires' }, () => { void loadAll(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'hire_tasks' }, () => { void loadAll(); })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'documents' }, () => { void loadAll(); })
+        .subscribe((status) => {
+          setRealtimeConnected(status === 'SUBSCRIBED');
+        });
+
+      channelRef.current = channel;
+    } catch {
+      // Supabase not configured — silently skip Realtime
+    }
 
     return () => {
-      void supabase.removeChannel(channel);
+      if (channel) {
+        try {
+          const supabase = createClient();
+          void supabase.removeChannel(channel);
+        } catch {
+          // ignore
+        }
+      }
     };
   }, [loadAll]);
 

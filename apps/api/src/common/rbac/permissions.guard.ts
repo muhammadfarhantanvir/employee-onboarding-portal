@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthenticatedRequest } from '../http.types';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { hasPermission, Permission } from './rbac.constants';
 import {
   PERMISSIONS_ANY_KEY,
@@ -22,6 +23,16 @@ export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    // Check if route is marked as public - if so, allow access
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     const requiredPermissions =
       this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
         context.getHandler(),

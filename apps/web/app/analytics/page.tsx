@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -8,8 +8,7 @@ import {
 } from 'recharts';
 import { AppShell } from '@/components/layout/AppShell';
 import { getSession } from '@/lib/api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
+import { apiFetch } from '@/lib/use-api';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -51,18 +50,7 @@ interface CohortPoint {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-async function apiFetch<T>(path: string): Promise<T> {
-  const session = getSession();
-  if (!session) throw new Error('Not authenticated');
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      'X-Company-Slug': session.companySlug,
-    },
-  });
-  if (!res.ok) throw new Error(`Failed: ${res.status}`);
-  return res.json();
-}
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
 function downloadCsv(path: string, filename: string) {
   const session = getSession();

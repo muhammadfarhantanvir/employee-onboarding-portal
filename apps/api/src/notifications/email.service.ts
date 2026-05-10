@@ -1,13 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Resend } from 'resend';
 import { randomUUID } from 'crypto';
 import { EmailLog, EmailStatus } from './notifications.types';
+import {
+  hireInviteHtml,
+  taskReminderHtml,
+  overdueEscalationHtml,
+  docReviewAlertHtml,
+  docRejectedHtml,
+  docApprovedHtml,
+  onboardingCompleteHtml,
+  onboardingCompleteManagerHtml,
+  itProvisioningHtml,
+  managerAlertHtml,
+  checkinReminderHtml,
+} from './email.templates';
 
 export interface SendEmailOptions {
   companyId: string;
   to: string;
   subject: string;
   template: string;
-  variables: Record<string, string | number | boolean | null>;
+  html: string;
 }
 
 export interface EmailResult {
@@ -17,22 +31,44 @@ export interface EmailResult {
 }
 
 /**
- * EmailService — simulates Resend / Nodemailer transactional email.
+ * EmailService — sends transactional emails via Resend.
  *
- * In production:
- *   - Replace `simulateSend()` with a real Resend API call:
- *     `await resend.emails.send({ from, to, subject, html })`
- *   - Load HTML templates from disk / compile with Handlebars
- *   - Store RESEND_API_KEY in environment variables
+ * Configuration (set in .env):
+ *   RESEND_API_KEY   — your Resend API key (re_xxxxxxxxx)
+ *   RESEND_FROM_EMAIL — sender address (e.g. onboarding@resend.dev)
+ *   RESEND_FROM_NAME  — sender display name
  *
  * All sends are logged to the in-memory email log for audit / retry.
+ * In production, persist the log to the email_log Supabase table.
  */
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly log = new Map<string, EmailLog>();
 
-  // ── Public API ─────────────────────────────────────────────────
+  private readonly resend: Resend | null;
+  private readonly fromAddress: string;
+  private readonly isConfigured: boolean;
+
+  constructor() {
+    const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
+    const fromName = process.env.RESEND_FROM_NAME ?? 'Employee Onboarding Portal';
+
+    this.fromAddress = `${fromName} <${fromEmail}>`;
+
+    if (apiKey && apiKey !== 're_xxxxxxxxx') {
+      this.resend = new Resend(apiKey);
+      this.isConfigured = true;
+      this.logger.log('[EMAIL] Resend configured — live email delivery enabled');
+    } else {
+      this.resend = null;
+      this.isConfigured = false;
+      this.logger.warn('[EMAIL] RESEND_API_KEY not set — falling back to simulation mode');
+    }
+  }
+
+  // ── Public send methods ────────────────────────────────────────
 
   async sendHireInvite(opts: {
     companyId: string;
@@ -47,12 +83,7 @@ export class EmailService {
       to: opts.to,
       subject: `Welcome to ${opts.companyName} — Your onboarding starts here`,
       template: 'hire_invite',
-      variables: {
-        hireName: opts.hireName,
-        companyName: opts.companyName,
-        inviteLink: opts.inviteLink,
-        startDate: opts.startDate,
-      },
+      html: hireInviteHtml(opts),
     });
   }
 
@@ -70,13 +101,7 @@ export class EmailService {
       to: opts.to,
       subject: `Reminder: "${opts.taskTitle}" is due soon`,
       template: 'task_reminder',
-      variables: {
-        recipientName: opts.recipientName,
-        taskTitle: opts.taskTitle,
-        hireName: opts.hireName,
-        dueDate: opts.dueDate,
-        taskLink: opts.taskLink,
-      },
+      html: taskReminderHtml(opts),
     });
   }
 
@@ -93,12 +118,7 @@ export class EmailService {
       to: opts.to,
       subject: `⚠️ ${opts.overdueCount} overdue task(s) for ${opts.hireName}`,
       template: 'overdue_escalation',
-      variables: {
-        hrName: opts.hrName,
-        hireName: opts.hireName,
-        overdueCount: opts.overdueCount,
-        dashboardLink: opts.dashboardLink,
-      },
+      html: overdueEscalationHtml(opts),
     });
   }
 
@@ -115,12 +135,7 @@ export class EmailService {
       to: opts.to,
       subject: `Document ready for review: "${opts.documentName}"`,
       template: 'doc_review_alert',
-      variables: {
-        hrName: opts.hrName,
-        documentName: opts.documentName,
-        hireName: opts.hireName,
-        reviewLink: opts.reviewLink,
-      },
+      html: docReviewAlertHtml(opts),
     });
   }
 
@@ -137,12 +152,7 @@ export class EmailService {
       to: opts.to,
       subject: `Action required: "${opts.documentName}" was rejected`,
       template: 'doc_rejected',
-      variables: {
-        hireName: opts.hireName,
-        documentName: opts.documentName,
-        rejectionNote: opts.rejectionNote,
-        uploadLink: opts.uploadLink,
-      },
+      html: docRejectedHtml(opts),
     });
   }
 
@@ -157,7 +167,7 @@ export class EmailService {
       to: opts.to,
       subject: `"${opts.documentName}" has been approved`,
       template: 'doc_approved',
-      variables: { hireName: opts.hireName, documentName: opts.documentName },
+      html: docApprovedHtml(opts),
     });
   }
 
@@ -174,17 +184,16 @@ export class EmailService {
       to: opts.to,
       subject: `🎉 Congratulations ${opts.hireName} — Onboarding complete!`,
       template: 'onboarding_complete',
-      variables: { hireName: opts.hireName, companyName: opts.companyName },
+      html: onboardingCompleteHtml({ hireName: opts.hireName, companyName: opts.companyName }),
     });
 
-    // Also notify manager
     if (opts.managerTo && opts.managerName) {
       await this.send({
         companyId: opts.companyId,
         to: opts.managerTo,
         subject: `${opts.hireName} has completed onboarding`,
         template: 'onboarding_complete_manager',
-        variables: { managerName: opts.managerName, hireName: opts.hireName },
+        html: onboardingCompleteManagerHtml({ managerName: opts.managerName, hireName: opts.hireName }),
       });
     }
 
@@ -204,12 +213,7 @@ export class EmailService {
       to: opts.to,
       subject: `IT setup needed: ${opts.hireName} starts ${opts.startDate}`,
       template: 'it_provisioning',
-      variables: {
-        itAdminName: opts.itAdminName,
-        hireName: opts.hireName,
-        startDate: opts.startDate,
-        checklistLink: opts.checklistLink,
-      },
+      html: itProvisioningHtml(opts),
     });
   }
 
@@ -226,12 +230,7 @@ export class EmailService {
       to: opts.to,
       subject: `New hire joining your team: ${opts.hireName}`,
       template: 'manager_alert',
-      variables: {
-        managerName: opts.managerName,
-        hireName: opts.hireName,
-        startDate: opts.startDate,
-        dashboardLink: opts.dashboardLink,
-      },
+      html: managerAlertHtml(opts),
     });
   }
 
@@ -248,12 +247,7 @@ export class EmailService {
       to: opts.to,
       subject: `${opts.dayMark}-day check-in due: ${opts.hireName}`,
       template: `checkin_${opts.dayMark}_day`,
-      variables: {
-        managerName: opts.managerName,
-        hireName: opts.hireName,
-        dayMark: opts.dayMark,
-        checklistLink: opts.checklistLink,
-      },
+      html: checkinReminderHtml(opts),
     });
   }
 
@@ -278,9 +272,10 @@ export class EmailService {
     };
   }
 
-  // ── Private ────────────────────────────────────────────────────
+  // ── Core send ──────────────────────────────────────────────────
 
   private async send(opts: SendEmailOptions): Promise<EmailResult> {
+    // Create log entry
     const logEntry: EmailLog = {
       id: randomUUID(),
       companyId: opts.companyId,
@@ -295,8 +290,11 @@ export class EmailService {
     };
     this.log.set(logEntry.id, logEntry);
 
-    const result = await this.simulateSend(opts);
+    const result = this.isConfigured
+      ? await this.sendViaResend(opts)
+      : await this.simulateSend(opts);
 
+    // Update log entry
     const updated: EmailLog = {
       ...logEntry,
       status: result.success ? 'sent' : 'failed',
@@ -308,7 +306,7 @@ export class EmailService {
 
     if (result.success) {
       this.logger.log(
-        `[EMAIL SENT] template=${opts.template} to=${opts.to} subject="${opts.subject}"`,
+        `[EMAIL SENT] template=${opts.template} to=${opts.to} id=${result.providerId}`,
       );
     } else {
       this.logger.warn(
@@ -320,21 +318,41 @@ export class EmailService {
   }
 
   /**
-   * Simulates sending via Resend.
-   * In production replace with:
-   *   const { data, error } = await resend.emails.send({ from, to, subject, html })
+   * Sends via the real Resend API.
+   * Docs: https://resend.com/docs/api-reference/emails/send-email
+   */
+  private async sendViaResend(opts: SendEmailOptions): Promise<EmailResult> {
+    try {
+      const { data, error } = await this.resend!.emails.send({
+        from: this.fromAddress,
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+      });
+
+      if (error) {
+        return { success: false, providerId: null, error: error.message };
+      }
+
+      return {
+        success: true,
+        providerId: data?.id ?? null,
+        error: null,
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { success: false, providerId: null, error: msg };
+    }
+  }
+
+  /**
+   * Fallback simulation when RESEND_API_KEY is not configured.
+   * Logs the email content so you can inspect it during development.
    */
   private async simulateSend(opts: SendEmailOptions): Promise<EmailResult> {
-    // Simulate ~5% failure rate for realism
-    const shouldFail = Math.random() < 0.05;
-    if (shouldFail) {
-      return {
-        success: false,
-        providerId: null,
-        error: 'Simulated delivery failure (5% rate)',
-      };
-    }
-
+    this.logger.debug(
+      `[EMAIL SIMULATED] to=${opts.to} subject="${opts.subject}" template=${opts.template}`,
+    );
     return {
       success: true,
       providerId: `sim_${randomUUID().replace(/-/g, '').slice(0, 16)}`,

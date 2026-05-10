@@ -68,6 +68,7 @@ const PASSWORD_ITERATIONS = 120000;
 export class AuthService {
   private readonly accessTokenExpiresIn = process.env.JWT_EXPIRY ?? '15m';
   private readonly refreshTokenExpiresIn = process.env.JWT_REFRESH_EXPIRY ?? '7d';
+  private readonly jwtRefreshSecret = process.env.JWT_REFRESH_SECRET ?? 'super-secret-refresh-at-least-32-chars-long';
 
   constructor(
     private readonly jwtService: JwtService,
@@ -281,7 +282,7 @@ export class AuthService {
         expiresIn: this.accessTokenExpiresIn,
       }),
       this.jwtService.signAsync(refreshPayload, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.jwtRefreshSecret,
         expiresIn: this.refreshTokenExpiresIn,
       }),
     ]);
@@ -310,7 +311,7 @@ export class AuthService {
       const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
         token,
         {
-          secret: process.env.JWT_REFRESH_SECRET,
+          secret: this.jwtRefreshSecret,
         },
       );
       if (payload.type !== 'refresh') {

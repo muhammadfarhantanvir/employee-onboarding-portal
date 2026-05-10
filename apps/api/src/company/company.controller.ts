@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Delete,
@@ -86,7 +86,7 @@ export class CompanyPublicController {
 @ApiForbiddenResponse({
   description: 'Token tenant, subdomain, or role is not allowed',
 })
-@UseGuards(JwtAuthGuard, CompanyGuard)
+@UseGuards(CompanyGuard)
 @Controller('company')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}

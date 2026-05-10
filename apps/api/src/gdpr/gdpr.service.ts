@@ -403,12 +403,20 @@ export class GdprService {
     count: number;
   } {
     const today = new Date().toISOString().slice(0, 10);
-    const { documents } = this.documentsService.listCompanyDocuments(companyId);
-    const { documents: hireDocs } = this.documentsService.listPendingReview(companyId);
+    // Get all company docs (approved + pending)
+    const { documents: companyDocs } = this.documentsService.listCompanyDocuments(companyId);
+    // Get all hire docs via pending review (includes all statuses in the store)
+    const { documents: pendingDocs } = this.documentsService.listPendingReview(companyId);
 
-    // Get all docs across company
-    const allDocs = [...documents, ...hireDocs];
-    const expired = allDocs.filter(
+    const allDocs = [...companyDocs, ...pendingDocs];
+    const seen = new Set<string>();
+    const unique = allDocs.filter((d) => {
+      if (seen.has(d.id)) return false;
+      seen.add(d.id);
+      return true;
+    });
+
+    const expired = unique.filter(
       (d) => d.retentionUntil && d.retentionUntil < today && d.status !== 'superseded',
     );
 

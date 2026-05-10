@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+﻿import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -11,6 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../common/http.types';
 import {
@@ -30,6 +31,7 @@ import { AuthenticatedUser } from '../workspace/workspace.types';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @ApiOperation({ summary: 'Register a company workspace and owner account' })
   @ApiBody({ schema: registerBodySchema })
   @ApiCreatedResponse({ schema: authResponseSchema })
@@ -39,6 +41,7 @@ export class AuthController {
     return this.authService.register(body);
   }
 
+  @Public()
   @ApiOperation({ summary: 'Log in to a company workspace' })
   @ApiBody({ schema: loginBodySchema })
   @ApiOkResponse({ schema: authResponseSchema })
@@ -48,6 +51,7 @@ export class AuthController {
     return this.authService.login(body, request);
   }
 
+  @Public()
   @ApiOperation({ summary: 'Rotate an access token using a refresh token' })
   @ApiBody({ schema: refreshBodySchema })
   @ApiOkResponse({ schema: authResponseSchema })
@@ -62,8 +66,7 @@ export class AuthController {
   @ApiBody({ schema: logoutBodySchema, required: false })
   @ApiOkResponse({ schema: successSchema })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid bearer token' })
-  @UseGuards(JwtAuthGuard)
-  @Post('logout')
+    @Post('logout')
   logout(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     return this.authService.logout(body, user);
   }
@@ -72,12 +75,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Get the current user and company workspace' })
   @ApiOkResponse({ schema: currentContextSchema })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid bearer token' })
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
+    @Get('me')
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.me(user);
   }
 
+  @Public()
   @ApiOperation({ summary: 'Accept a workspace invite and set a password' })
   @ApiBody({ schema: acceptInviteBodySchema })
   @ApiCreatedResponse({ schema: authResponseSchema })

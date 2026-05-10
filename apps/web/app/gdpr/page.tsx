@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { getSession } from '@/lib/api';
+import { apiFetch } from '@/lib/use-api';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
@@ -45,27 +46,6 @@ interface ExpiredDoc {
   category: string;
   retentionUntil: string;
   hireId: string | null;
-}
-
-// ── Helpers ────────────────────────────────────────────────────
-
-async function apiFetch<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const session = getSession();
-  if (!session) throw new Error('Not authenticated');
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.accessToken}`,
-      'X-Company-Slug': session.companySlug,
-      ...(opts.headers ?? {}),
-    },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body?.message ?? `Failed: ${res.status}`);
-  }
-  return res.json();
 }
 
 const STATUS_STYLES: Record<string, string> = {

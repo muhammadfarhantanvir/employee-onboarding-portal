@@ -1,11 +1,6 @@
 import { OnboardingTemplate, TemplateTask } from './types';
 
-const API_BASE =
-  (typeof window !== 'undefined'
-    ? (window as any).__NEXT_PUBLIC_API_URL__
-    : undefined) ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'http://localhost:3001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
 // ── Auth helpers ───────────────────────────────────────────────
 

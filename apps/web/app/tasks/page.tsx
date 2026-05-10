@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -52,7 +52,11 @@ async function fetchMyTasks(): Promise<Task[]> {
       'X-Company-Slug': session.companySlug,
     },
   });
-  if (!res.ok) throw new Error('Failed to load tasks');
+  if (!res.ok) {
+    if (res.status === 401) { window.location.href = '/login'; throw new Error('Session expired'); }
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message ?? `Failed: ${res.status}`);
+  }
   const data = await res.json();
   return data.tasks ?? [];
 }

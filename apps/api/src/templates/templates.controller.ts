@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -77,7 +77,7 @@ import { TemplatesService } from './templates.service';
   description: '500 — Unexpected server error',
   schema: internalErrorSchema,
 })
-@UseGuards(JwtAuthGuard, CompanyGuard)
+@UseGuards(CompanyGuard)
 @Controller('templates')
 export class TemplatesController {
   constructor(private readonly templatesService: TemplatesService) {}

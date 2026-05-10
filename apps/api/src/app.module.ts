@@ -15,6 +15,7 @@ import { ManagerModule } from './manager/manager.module';
 import { GdprModule } from './gdpr/gdpr.module';
 import { TenantContextMiddleware } from './common/middleware/tenant-context.middleware';
 import { WorkspaceModule } from './workspace/workspace.module';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/rbac/permissions.guard';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
 
@@ -22,6 +23,10 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
   imports: [
     JwtModule.register({
       global: true,
+      secret: process.env.JWT_SECRET ?? 'super-secret-at-least-32-chars-long',
+      signOptions: {
+        // Default sign options - can be overridden when signing tokens
+      },
     }),
     WorkspaceModule,
     AuthModule,
@@ -39,6 +44,11 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
   controllers: [AppController],
   providers: [
     TenantContextMiddleware,
+    // JwtAuthGuard MUST run before PermissionsGuard so authUser is populated
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: PermissionsGuard,

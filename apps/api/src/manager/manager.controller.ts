@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -67,7 +67,7 @@ const FORBIDDEN = {
 @ApiForbiddenResponse(FORBIDDEN)
 @ApiTooManyRequestsResponse({ description: '429 — Rate limit exceeded', schema: tooManyRequestsSchema })
 @ApiInternalServerErrorResponse({ description: '500 — Unexpected server error', schema: internalErrorSchema })
-@UseGuards(JwtAuthGuard, CompanyGuard)
+@UseGuards(CompanyGuard)
 @Controller('manager')
 export class ManagerController {
   constructor(private readonly managerService: ManagerService) {}
