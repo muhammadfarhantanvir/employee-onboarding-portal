@@ -1,4 +1,4 @@
-create extension if not exists pgcrypto;
+﻿create extension if not exists pgcrypto;
 
 create table if not exists public.companies (
   id uuid primary key default gen_random_uuid(),
@@ -65,11 +65,17 @@ create table if not exists public.refresh_sessions (
   created_at timestamptz not null default now()
 );
 
-alter table public.companies
-  add constraint companies_owner_user_fk
-  foreign key (owner_user_id)
-  references public.users(id)
-  deferrable initially deferred;
+do $ begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'companies_owner_user_fk'
+  ) then
+    alter table public.companies
+      add constraint companies_owner_user_fk
+      foreign key (owner_user_id)
+      references public.users(id)
+      deferrable initially deferred;
+  end if;
+end $;
 
 comment on table public.companies is
   'Tenant root table. companies.id is the company_id used by child tenant tables.';
