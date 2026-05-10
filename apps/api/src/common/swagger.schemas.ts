@@ -1171,6 +1171,128 @@ export const blockItItemBodySchema = {
   },
 };
 
+// ── Manager Approval Workflow ─────────────────────
+export const phaseApprovalSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    hireId: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    managerId: { type: 'string', format: 'uuid' },
+    phase: { type: 'string', enum: ['pre_boarding', 'week_1', 'month_1', 'month_3'], example: 'week_1' },
+    approvedAt: { type: 'string', format: 'date-time' },
+    note: { type: 'string', nullable: true, example: 'All tasks completed on time.' },
+  },
+};
+
+export const managerNoteSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    hireId: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    managerId: { type: 'string', format: 'uuid' },
+    body: { type: 'string', example: 'Strong technical background. Fast-track to senior review at 90 days.' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const reuploadRequestSchema = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    documentId: { type: 'string', format: 'uuid' },
+    hireId: { type: 'string', format: 'uuid' },
+    companyId: { type: 'string', format: 'uuid' },
+    requestedBy: { type: 'string', format: 'uuid' },
+    reason: { type: 'string', example: 'Document is blurry. Please re-upload a clearer scan.' },
+    status: { type: 'string', enum: ['pending', 'fulfilled', 'cancelled'], example: 'pending' },
+    resolvedAt: { type: 'string', format: 'date-time', nullable: true },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const phaseProgressSchema = {
+  type: 'object',
+  properties: {
+    pre_boarding: { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' }, approved: { type: 'boolean' } } },
+    week_1:       { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' }, approved: { type: 'boolean' } } },
+    month_1:      { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' }, approved: { type: 'boolean' } } },
+    month_3:      { type: 'object', properties: { total: { type: 'number' }, completed: { type: 'number' }, approved: { type: 'boolean' } } },
+  },
+};
+
+export const managerHireViewSchema = {
+  allOf: [
+    hireSchema,
+    {
+      type: 'object',
+      properties: {
+        tasks: { type: 'array', items: hireTaskSchema },
+        phaseApprovals: { type: 'array', items: phaseApprovalSchema },
+        managerNotes: { type: 'array', items: managerNoteSchema },
+        pendingReuploadRequests: { type: 'array', items: reuploadRequestSchema },
+        daysUntilStart: { type: 'number', example: -3, description: 'Negative = already started' },
+        overdueTaskCount: { type: 'number', example: 1 },
+        phaseProgress: phaseProgressSchema,
+      },
+    },
+  ],
+};
+
+export const managerDashboardSchema = {
+  type: 'object',
+  properties: {
+    hires: { type: 'array', items: managerHireViewSchema },
+    count: { type: 'number', example: 3 },
+    summary: {
+      type: 'object',
+      properties: {
+        total: { type: 'number', example: 3 },
+        pendingInvite: { type: 'number', example: 1 },
+        inProgress: { type: 'number', example: 1 },
+        atRisk: { type: 'number', example: 0 },
+        completed: { type: 'number', example: 1 },
+        pendingApproval: { type: 'number', example: 1 },
+      },
+    },
+  },
+};
+
+export const approvePhaseBodySchema = {
+  type: 'object',
+  required: ['phase'],
+  properties: {
+    phase: { type: 'string', enum: ['pre_boarding', 'week_1', 'month_1', 'month_3'], example: 'week_1' },
+    note: { type: 'string', example: 'All Week 1 tasks completed on time. Great start!' },
+  },
+};
+
+export const finalApprovalBodySchema = {
+  type: 'object',
+  properties: {
+    note: { type: 'string', example: 'Onboarding complete. Nina is fully integrated into the team.' },
+  },
+};
+
+export const createManagerNoteBodySchema = {
+  type: 'object',
+  required: ['body'],
+  properties: {
+    body: { type: 'string', example: 'Strong technical background. Fast-track to senior review at 90 days.' },
+  },
+};
+
+export const requestReuploadBodySchema = {
+  type: 'object',
+  required: ['documentId', 'reason'],
+  properties: {
+    documentId: { type: 'string', format: 'uuid' },
+    reason: { type: 'string', example: 'Document is blurry. Please re-upload a clearer scan.' },
+  },
+};
+
 // ── Analytics ────────────────────────────────────
 export const analyticsOverviewSchema = {
   type: 'object',
