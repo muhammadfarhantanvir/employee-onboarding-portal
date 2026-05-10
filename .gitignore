@@ -1,8 +1,23 @@
 node_modules/
 dist/
 apps/*/dist/
+
+# Next.js
+.next/
+out/
+
+# TypeScript build info
 *.tsbuildinfo
+
+# Environment variables
 .env
 .env.*
 !.env.example
+
+# Logs
 *.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

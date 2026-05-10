@@ -366,7 +366,26 @@ export const createTemplateTaskBodySchema = {
   },
 };
 
-export const updateTemplateTaskBodySchema = createTemplateTaskBodySchema;
+export const updateTemplateTaskBodySchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', example: 'Setup Workstation' },
+    description: { type: 'string', example: 'Detailed instructions for IT' },
+    taskType: { type: 'string', enum: ['checkbox', 'document_upload', 'acknowledgement', 'form_submission', 'meeting'] },
+    phase: { type: 'string', enum: ['pre_boarding', 'week_1', 'month_1', 'month_3'] },
+    assignedRole: { type: 'string', enum: ['hr_admin', 'manager', 'it_admin', 'new_hire'] },
+    dueDayOffset: { type: 'number', example: 0 },
+    isRequired: { type: 'boolean', example: true },
+  },
+};
+
+export const duplicateTemplateBodySchema = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', example: 'Software Engineer — Backend' },
+    department: { type: 'string', example: 'Engineering' },
+  },
+};
 
 export const reorderTasksBodySchema = {
   type: 'object',

@@ -5,7 +5,8 @@ import {
   NestInterceptor,
   Logger,
 } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { AuthenticatedRequest } from '../http.types';
 
 /**
