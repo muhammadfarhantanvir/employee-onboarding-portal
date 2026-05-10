@@ -16,9 +16,12 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiCreatedResponse,
+  ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
+  ApiTooManyRequestsResponse,
+  ApiInternalServerErrorResponse,
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
@@ -37,28 +40,61 @@ import {
   updateTemplateTaskBodySchema,
   reorderTasksBodySchema,
   successSchema,
+  errorSchema,
+  notFoundSchema,
+  tooManyRequestsSchema,
+  internalErrorSchema,
 } from '../common/swagger.schemas';
 import { TemplatesService } from './templates.service';
 
 @ApiTags('Onboarding Templates')
 @ApiBearerAuth('access-token')
-@ApiUnauthorizedResponse({ description: 'Missing or invalid bearer token' })
-@ApiForbiddenResponse({ description: 'Insufficient permissions' })
+@ApiUnauthorizedResponse({
+  description: '401 — Missing or invalid bearer token',
+  schema: {
+    type: 'object',
+    properties: {
+      statusCode: { type: 'number', example: 401 },
+      message: { type: 'string', example: 'Unauthorized' },
+    },
+  },
+})
+@ApiForbiddenResponse({
+  description: '403 — Insufficient permissions for this action',
+  schema: {
+    type: 'object',
+    properties: {
+      statusCode: { type: 'number', example: 403 },
+      message: { type: 'string', example: 'Forbidden resource' },
+    },
+  },
+})
+@ApiTooManyRequestsResponse({
+  description: '429 — Rate limit exceeded',
+  schema: tooManyRequestsSchema,
+})
+@ApiInternalServerErrorResponse({
+  description: '500 — Unexpected server error',
+  schema: internalErrorSchema,
+})
 @UseGuards(JwtAuthGuard, CompanyGuard)
 @Controller('templates')
 export class TemplatesController {
   constructor(private readonly templatesService: TemplatesService) {}
 
-  // ── Templates ──────────────────────────────────────────────────
+  // ── GET /templates ─────────────────────────────────────────────
 
-  @ApiOperation({ summary: 'List all onboarding templates for the company' })
+  @ApiOperation({
+    summary: 'List all onboarding templates',
+    description: 'Returns all templates for the company, sorted by name.',
+  })
   @ApiOkResponse({
-    description: 'List of templates returned successfully',
+    description: '200 — Templates returned successfully',
     schema: {
       type: 'object',
       properties: {
         templates: { type: 'array', items: onboardingTemplateSchema },
-        count: { type: 'number' },
+        count: { type: 'number', example: 3 },
       },
     },
   })
@@ -69,12 +105,21 @@ export class TemplatesController {
     return { templates, count: templates.length };
   }
 
-  @ApiOperation({ summary: 'Create a new onboarding template' })
-  @ApiCreatedResponse({
-    description: 'Template created successfully',
-    schema: onboardingTemplateSchema,
+  // ── POST /templates ────────────────────────────────────────────
+
+  @ApiOperation({
+    summary: 'Create a new onboarding template',
+    description: 'Creates an empty template. Add tasks via POST /templates/:id/tasks.',
   })
   @ApiBody({ schema: createTemplateBodySchema })
+  @ApiCreatedResponse({
+    description: '201 — Template created successfully',
+    schema: onboardingTemplateSchema,
+  })
+  @ApiBadRequestResponse({
+    description: '400 — name is required or exceeds max length',
+    schema: errorSchema,
+  })
   @RequirePermissions(Permission.CREATE_ONBOARDING_PLANS)
   @Post()
   create(
@@ -85,21 +130,47 @@ export class TemplatesController {
     return this.templatesService.createTemplate(companyId, body, user.id);
   }
 
-  @ApiOperation({ summary: 'Get a template with all its tasks' })
-  @ApiOkResponse({ description: 'Template found', schema: onboardingTemplateSchema })
-  @ApiNotFoundResponse({ description: 'Template not found' })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  // ── GET /templates/:id ─────────────────────────────────────────
+
+  @ApiOperation({
+    summary: 'Get a template with all its tasks',
+    description: 'Returns the full template including all tasks sorted by phase and sortOrder.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'Template ID' })
+  @ApiOkResponse({
+    description: '200 — Template found',
+    schema: onboardingTemplateSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Template not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.READ_ONBOARDING_PLANS)
   @Get(':id')
   findOne(@CompanyId() companyId: string, @Param('id') id: string) {
     return this.templatesService.getTemplate(companyId, id);
   }
 
-  @ApiOperation({ summary: 'Update template metadata (name, description, department)' })
-  @ApiOkResponse({ description: 'Template updated', schema: onboardingTemplateSchema })
-  @ApiNotFoundResponse({ description: 'Template not found' })
+  // ── PATCH /templates/:id ───────────────────────────────────────
+
+  @ApiOperation({
+    summary: 'Update template metadata',
+    description: 'Updates name, description, or department. Does not affect tasks.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'Template ID' })
   @ApiBody({ schema: updateTemplateBodySchema })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({
+    description: '200 — Template updated',
+    schema: onboardingTemplateSchema,
+  })
+  @ApiBadRequestResponse({
+    description: '400 — Validation error',
+    schema: errorSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Template not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.UPDATE_ONBOARDING_PLANS)
   @Patch(':id')
   update(
@@ -110,10 +181,21 @@ export class TemplatesController {
     return this.templatesService.updateTemplate(companyId, id, body);
   }
 
-  @ApiOperation({ summary: 'Delete a template and all its tasks' })
-  @ApiOkResponse({ description: 'Template deleted', schema: successSchema })
-  @ApiNotFoundResponse({ description: 'Template not found' })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  // ── DELETE /templates/:id ──────────────────────────────────────
+
+  @ApiOperation({
+    summary: 'Delete a template and all its tasks',
+    description: 'Permanently removes the template. Existing hire tasks are not affected.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'Template ID' })
+  @ApiOkResponse({
+    description: '200 — Template deleted',
+    schema: successSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Template not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.DELETE_ONBOARDING_PLANS)
   @HttpCode(HttpStatus.OK)
   @Delete(':id')
@@ -122,15 +204,15 @@ export class TemplatesController {
     return { success: true };
   }
 
+  // ── POST /templates/:id/duplicate ─────────────────────────────
+
   @ApiOperation({
     summary: 'Duplicate a template',
     description:
-      'Creates a full copy of the template and all its tasks. Useful for customising per hire or role variant.',
+      'Creates a full copy of the template and all its tasks. ' +
+      'Useful for customising per hire or role variant.',
   })
-  @ApiCreatedResponse({
-    description: 'Duplicate template created',
-    schema: onboardingTemplateSchema,
-  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'Source template ID' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -140,7 +222,14 @@ export class TemplatesController {
       },
     },
   })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({
+    description: '201 — Duplicate template created',
+    schema: onboardingTemplateSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Source template not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.CREATE_ONBOARDING_PLANS)
   @Post(':id/duplicate')
   duplicate(
@@ -152,13 +241,26 @@ export class TemplatesController {
     return this.templatesService.duplicateTemplate(companyId, id, user.id, body);
   }
 
-  // ── Template Tasks ─────────────────────────────────────────────
+  // ── POST /templates/:id/tasks ──────────────────────────────────
 
-  @ApiOperation({ summary: 'Add a task to a template' })
-  @ApiCreatedResponse({ description: 'Task added', schema: templateTaskSchema })
-  @ApiNotFoundResponse({ description: 'Template not found' })
+  @ApiOperation({
+    summary: 'Add a task to a template',
+    description: 'Appends a new task to the template. sortOrder is auto-assigned.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'Template ID' })
   @ApiBody({ schema: createTemplateTaskBodySchema })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiCreatedResponse({
+    description: '201 — Task added to template',
+    schema: templateTaskSchema,
+  })
+  @ApiBadRequestResponse({
+    description: '400 — title, taskType, or phase is invalid',
+    schema: errorSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Template not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.UPDATE_ONBOARDING_PLANS)
   @Post(':id/tasks')
   addTask(
@@ -169,12 +271,27 @@ export class TemplatesController {
     return this.templatesService.addTask(companyId, id, body);
   }
 
-  @ApiOperation({ summary: 'Update a task within a template' })
-  @ApiOkResponse({ description: 'Task updated', schema: templateTaskSchema })
-  @ApiNotFoundResponse({ description: 'Template or task not found' })
-  @ApiBody({ schema: updateTemplateTaskBodySchema })
+  // ── PATCH /templates/:id/tasks/:taskId ─────────────────────────
+
+  @ApiOperation({
+    summary: 'Update a task within a template',
+    description: 'Partial update — only provided fields are changed.',
+  })
   @ApiParam({ name: 'id', format: 'uuid', description: 'Template ID' })
   @ApiParam({ name: 'taskId', format: 'uuid', description: 'Task ID' })
+  @ApiBody({ schema: updateTemplateTaskBodySchema })
+  @ApiOkResponse({
+    description: '200 — Task updated',
+    schema: templateTaskSchema,
+  })
+  @ApiBadRequestResponse({
+    description: '400 — Invalid field value',
+    schema: errorSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Template or task not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.UPDATE_ONBOARDING_PLANS)
   @Patch(':id/tasks/:taskId')
   updateTask(
@@ -186,11 +303,22 @@ export class TemplatesController {
     return this.templatesService.updateTask(companyId, id, taskId, body);
   }
 
-  @ApiOperation({ summary: 'Delete a task from a template' })
-  @ApiOkResponse({ description: 'Task deleted', schema: successSchema })
-  @ApiNotFoundResponse({ description: 'Template or task not found' })
+  // ── DELETE /templates/:id/tasks/:taskId ────────────────────────
+
+  @ApiOperation({
+    summary: 'Delete a task from a template',
+    description: 'Permanently removes the task from the template.',
+  })
   @ApiParam({ name: 'id', format: 'uuid', description: 'Template ID' })
   @ApiParam({ name: 'taskId', format: 'uuid', description: 'Task ID' })
+  @ApiOkResponse({
+    description: '200 — Task deleted',
+    schema: successSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Template or task not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.UPDATE_ONBOARDING_PLANS)
   @HttpCode(HttpStatus.OK)
   @Delete(':id/tasks/:taskId')
@@ -203,18 +331,29 @@ export class TemplatesController {
     return { success: true };
   }
 
+  // ── POST /templates/:id/tasks/reorder ──────────────────────────
+
   @ApiOperation({
     summary: 'Reorder tasks within a template',
     description:
-      'Accepts an ordered array of all task IDs. Used by the drag-and-drop UI to persist new sort order.',
+      'Accepts an ordered array of ALL task IDs in the template. ' +
+      'Used by the drag-and-drop UI to persist new sort order. ' +
+      'Returns 400 if any task ID is missing or unknown.',
   })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'Template ID' })
+  @ApiBody({ schema: reorderTasksBodySchema })
   @ApiOkResponse({
-    description: 'Tasks reordered successfully',
+    description: '200 — Tasks reordered successfully',
     schema: onboardingTemplateSchema,
   })
-  @ApiNotFoundResponse({ description: 'Template not found' })
-  @ApiBody({ schema: reorderTasksBodySchema })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBadRequestResponse({
+    description: '400 — taskIds array is incomplete or contains unknown IDs',
+    schema: errorSchema,
+  })
+  @ApiNotFoundResponse({
+    description: '404 — Template not found',
+    schema: notFoundSchema,
+  })
   @RequirePermissions(Permission.UPDATE_ONBOARDING_PLANS)
   @Post(':id/tasks/reorder')
   reorderTasks(
