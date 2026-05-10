@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { OnboardingTemplate } from '@/lib/types';
 import * as api from '@/lib/api';
 import { TemplateCard } from './TemplateCard';
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/Button';
 type View = 'library' | 'editor';
 
 export function TemplateLibrary() {
+  const router = useRouter();
   const [view, setView] = useState<View>('library');
   const [templates, setTemplates] = useState<OnboardingTemplate[]>([]);
   const [activeTemplate, setActiveTemplate] = useState<OnboardingTemplate | null>(null);
@@ -37,7 +39,12 @@ export function TemplateLibrary() {
       const { templates: data } = await api.listTemplates();
       setTemplates(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load templates');
+      const msg = err instanceof Error ? err.message : 'Failed to load templates';
+      if (msg.toLowerCase().includes('authenticated') || msg.includes('401')) {
+        router.replace('/login');
+        return;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

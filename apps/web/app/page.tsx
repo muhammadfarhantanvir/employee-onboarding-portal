@@ -1,5 +1,6 @@
-import { TemplateLibrary } from '@/components/templates/TemplateLibrary';
+import { redirect } from 'next/navigation';
 
-export default function Page() {
-  return <TemplateLibrary />;
+// Root redirects to dashboard
+export default function RootPage() {
+  redirect('/dashboard');
 }
