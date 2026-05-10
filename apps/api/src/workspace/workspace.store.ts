@@ -3,11 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomBytes, randomUUID } from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import {
+  BillingResponse,
   BillingPlan,
   Company,
   CompanyResponse,
+  DomainVerificationChallengeResponse,
   Invitation,
   MemberResponse,
   RefreshSession,
@@ -51,6 +53,9 @@ interface UpdateCompanyInput {
   slug?: string;
   domain?: string;
   domainVerifiedAt?: string | null;
+  pendingDomain?: string | null;
+  domainVerificationTokenHash?: string | null;
+  domainVerificationExpiresAt?: string | null;
   logoUrl?: string | null;
   brandColor?: string;
   timezone?: string;
@@ -64,6 +69,7 @@ export class WorkspaceStore {
   private readonly users = new Map<string, User>();
   private readonly invitations = new Map<string, Invitation>();
   private readonly refreshSessions = new Map<string, RefreshSession>();
+  private readonly activeHireCounts = new Map<string, number>();
 
   constructor() {
     this.seedDemoWorkspace();
@@ -85,6 +91,9 @@ export class WorkspaceStore {
       slug: input.slug,
       domain: input.domain,
       domainVerifiedAt: now,
+      pendingDomain: null,
+      domainVerificationTokenHash: null,
+      domainVerificationExpiresAt: null,
       logoUrl: null,
       brandColor: input.brandColor,
       timezone: input.timezone,
@@ -115,6 +124,7 @@ export class WorkspaceStore {
 
     this.companies.set(company.id, company);
     this.users.set(owner.id, owner);
+    this.activeHireCounts.set(company.id, 0);
 
     return { company, owner };
   }
@@ -142,6 +152,20 @@ export class WorkspaceStore {
     return Array.from(this.users.values()).filter((user) => user.email === email);
   }
 
+  isSlugAvailable(slug: string, excludingCompanyId?: string): boolean {
+    return !Array.from(this.companies.values()).some(
+      (company) => company.slug === slug && company.id !== excludingCompanyId,
+    );
+  }
+
+  isDomainAvailable(domain: string, excludingCompanyId?: string): boolean {
+    return !Array.from(this.companies.values()).some(
+      (company) =>
+        company.id !== excludingCompanyId &&
+        (company.domain === domain || company.pendingDomain === domain),
+    );
+  }
+
   findUserByEmailInCompany(companyId: string, email: string): User | undefined {
     return Array.from(this.users.values()).find(
       (user) => user.companyId === companyId && user.email === email,
@@ -158,11 +182,11 @@ export class WorkspaceStore {
     const company = this.requireCompany(companyId);
 
     if (updates.slug && updates.slug !== company.slug) {
-      this.assertSlugAvailable(updates.slug);
+      this.assertSlugAvailable(updates.slug, companyId);
     }
 
     if (updates.domain && updates.domain !== company.domain) {
-      this.assertDomainAvailable(updates.domain);
+      this.assertDomainAvailable(updates.domain, companyId);
     }
 
     const updated: Company = {
@@ -170,6 +194,67 @@ export class WorkspaceStore {
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+    this.companies.set(companyId, updated);
+    return updated;
+  }
+
+  createDomainVerificationChallenge(
+    companyId: string,
+    domain: string,
+  ): DomainVerificationChallengeResponse {
+    this.assertDomainAvailable(domain, companyId);
+    const company = this.requireCompany(companyId);
+    const token = randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const updated: Company = {
+      ...company,
+      pendingDomain: domain,
+      domainVerificationTokenHash: this.hashValue(token),
+      domainVerificationExpiresAt: expiresAt,
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.companies.set(companyId, updated);
+
+    return {
+      domain,
+      verificationToken: token,
+      txtRecordName: `_onboarding-portal.${domain}`,
+      txtRecordValue: `onboarding-portal-verify=${token}`,
+      expiresAt,
+    };
+  }
+
+  verifyDomainChallenge(companyId: string, token: string): Company {
+    const company = this.requireCompany(companyId);
+    if (
+      !company.pendingDomain ||
+      !company.domainVerificationTokenHash ||
+      !company.domainVerificationExpiresAt
+    ) {
+      throw new ConflictException('No domain verification challenge is pending');
+    }
+
+    if (new Date(company.domainVerificationExpiresAt).getTime() < Date.now()) {
+      throw new ConflictException('Domain verification challenge has expired');
+    }
+
+    if (this.hashValue(token) !== company.domainVerificationTokenHash) {
+      throw new ConflictException('Domain verification token is invalid');
+    }
+
+    this.assertDomainAvailable(company.pendingDomain, companyId);
+    const now = new Date().toISOString();
+    const updated: Company = {
+      ...company,
+      domain: company.pendingDomain,
+      domainVerifiedAt: now,
+      pendingDomain: null,
+      domainVerificationTokenHash: null,
+      domainVerificationExpiresAt: null,
+      updatedAt: now,
+    };
+
     this.companies.set(companyId, updated);
     return updated;
   }
@@ -325,6 +410,30 @@ export class WorkspaceStore {
     return { company: updatedCompany, owner: promotedOwner };
   }
 
+  getActiveHireLimit(company: Company): number | null {
+    return company.plan === BillingPlan.FREE ? 5 : null;
+  }
+
+  getActiveHireCount(companyId: string): number {
+    return this.activeHireCounts.get(companyId) ?? 0;
+  }
+
+  canAddActiveHire(companyId: string, nextActiveHireCount?: number): boolean {
+    const company = this.requireCompany(companyId);
+    const limit = this.getActiveHireLimit(company);
+    if (limit === null) {
+      return true;
+    }
+    const count = nextActiveHireCount ?? this.getActiveHireCount(companyId) + 1;
+    return count <= limit;
+  }
+
+  assertCanAddActiveHire(companyId: string, nextActiveHireCount?: number): void {
+    if (!this.canAddActiveHire(companyId, nextActiveHireCount)) {
+      throw new ConflictException('Free workspaces are limited to 5 active hires');
+    }
+  }
+
   saveRefreshSession(session: RefreshSession): void {
     this.refreshSessions.set(session.id, session);
   }
@@ -356,21 +465,38 @@ export class WorkspaceStore {
   }
 
   companyResponse(company: Company): CompanyResponse {
+    const activeHireCount = this.getActiveHireCount(company.id);
     return {
       id: company.id,
       name: company.name,
       slug: company.slug,
       domain: company.domain,
       domainVerifiedAt: company.domainVerifiedAt,
+      pendingDomain: company.pendingDomain,
+      domainVerificationStatus: this.domainVerificationStatus(company),
+      domainVerificationExpiresAt: company.domainVerificationExpiresAt,
       logoUrl: company.logoUrl,
       brandColor: company.brandColor,
       timezone: company.timezone,
       locale: company.locale,
       plan: company.plan,
-      activeHireLimit: company.plan === BillingPlan.FREE ? 5 : null,
+      activeHireLimit: this.getActiveHireLimit(company),
+      activeHireCount,
       ownerUserId: company.ownerUserId,
       createdAt: company.createdAt,
       updatedAt: company.updatedAt,
+    };
+  }
+
+  billingResponse(company: Company): BillingResponse {
+    const activeHireCount = this.getActiveHireCount(company.id);
+    const activeHireLimit = this.getActiveHireLimit(company);
+    return {
+      plan: company.plan,
+      activeHireLimit,
+      activeHireCount,
+      canAddActiveHire:
+        activeHireLimit === null ? true : activeHireCount < activeHireLimit,
     };
   }
 
@@ -410,19 +536,29 @@ export class WorkspaceStore {
     return user;
   }
 
-  private assertSlugAvailable(slug: string): void {
-    if (this.findCompanyBySlug(slug)) {
+  private assertSlugAvailable(slug: string, excludingCompanyId?: string): void {
+    if (!this.isSlugAvailable(slug, excludingCompanyId)) {
       throw new ConflictException('Company slug is already in use');
     }
   }
 
-  private assertDomainAvailable(domain: string): void {
-    const exists = Array.from(this.companies.values()).some(
-      (company) => company.domain === domain,
-    );
-    if (exists) {
+  private assertDomainAvailable(domain: string, excludingCompanyId?: string): void {
+    if (!this.isDomainAvailable(domain, excludingCompanyId)) {
       throw new ConflictException('Company domain is already registered');
     }
+  }
+
+  private domainVerificationStatus(
+    company: Company,
+  ): 'verified' | 'pending' | 'unverified' {
+    if (company.pendingDomain) {
+      return 'pending';
+    }
+    return company.domainVerifiedAt ? 'verified' : 'unverified';
+  }
+
+  private hashValue(value: string): string {
+    return createHash('sha256').update(value).digest('hex');
   }
 
   private seedDemoWorkspace(): void {
@@ -435,6 +571,9 @@ export class WorkspaceStore {
       slug: 'demo-company',
       domain: 'demo-company.com',
       domainVerifiedAt: now,
+      pendingDomain: null,
+      domainVerificationTokenHash: null,
+      domainVerificationExpiresAt: null,
       logoUrl: null,
       brandColor: '#0F172A',
       timezone: 'Europe/Berlin',
@@ -480,6 +619,7 @@ export class WorkspaceStore {
     ];
 
     this.companies.set(company.id, company);
+    this.activeHireCounts.set(company.id, 0);
     for (const user of demoUsers) {
       this.users.set(user.id, user);
     }

@@ -30,6 +30,9 @@ export interface Company {
   slug: string;
   domain: string;
   domainVerifiedAt: string | null;
+  pendingDomain: string | null;
+  domainVerificationTokenHash: string | null;
+  domainVerificationExpiresAt: string | null;
   logoUrl: string | null;
   brandColor: string;
   timezone: string;
@@ -102,12 +105,16 @@ export interface CompanyResponse {
   slug: string;
   domain: string;
   domainVerifiedAt: string | null;
+  pendingDomain: string | null;
+  domainVerificationStatus: 'verified' | 'pending' | 'unverified';
+  domainVerificationExpiresAt: string | null;
   logoUrl: string | null;
   brandColor: string;
   timezone: string;
   locale: SupportedLocale;
   plan: BillingPlan;
   activeHireLimit: number | null;
+  activeHireCount: number;
   ownerUserId: string;
   createdAt: string;
   updatedAt: string;
@@ -128,4 +135,30 @@ export interface MemberResponse {
   invitedByUserId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WorkspaceAvailabilityResponse {
+  slug?: {
+    value: string;
+    available: boolean;
+  };
+  domain?: {
+    value: string;
+    available: boolean;
+  };
+}
+
+export interface DomainVerificationChallengeResponse {
+  domain: string;
+  verificationToken: string;
+  txtRecordName: string;
+  txtRecordValue: string;
+  expiresAt: string;
+}
+
+export interface BillingResponse {
+  plan: BillingPlan;
+  activeHireLimit: number | null;
+  activeHireCount: number;
+  canAddActiveHire: boolean;
 }

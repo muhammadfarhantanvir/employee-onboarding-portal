@@ -41,6 +41,21 @@ export const companySchema = {
       format: 'date-time',
       nullable: true,
     },
+    pendingDomain: {
+      type: 'string',
+      nullable: true,
+      example: 'acme.com',
+    },
+    domainVerificationStatus: {
+      type: 'string',
+      enum: ['verified', 'pending', 'unverified'],
+      example: 'verified',
+    },
+    domainVerificationExpiresAt: {
+      type: 'string',
+      format: 'date-time',
+      nullable: true,
+    },
     logoUrl: {
       type: 'string',
       nullable: true,
@@ -51,9 +66,30 @@ export const companySchema = {
     locale: { type: 'string', enum: ['de-DE', 'en-GB'] },
     plan: { type: 'string', enum: ['free', 'pro', 'enterprise'] },
     activeHireLimit: { type: 'number', nullable: true, example: 5 },
+    activeHireCount: { type: 'number', example: 0 },
     ownerUserId: { type: 'string', format: 'uuid' },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const workspaceAvailabilitySchema = {
+  type: 'object',
+  properties: {
+    slug: {
+      type: 'object',
+      properties: {
+        value: { type: 'string', example: 'acme' },
+        available: { type: 'boolean', example: true },
+      },
+    },
+    domain: {
+      type: 'object',
+      properties: {
+        value: { type: 'string', example: 'acme.com' },
+        available: { type: 'boolean', example: true },
+      },
+    },
   },
 };
 
@@ -177,6 +213,60 @@ export const updateCompanyBodySchema = {
     timezone: { type: 'string', example: 'Europe/Berlin' },
     locale: { type: 'string', enum: ['de-DE', 'en-GB'], example: 'en-GB' },
     plan: { type: 'string', enum: ['free', 'pro', 'enterprise'] },
+  },
+};
+
+export const domainVerificationBodySchema = {
+  type: 'object',
+  properties: {
+    domain: { type: 'string', example: 'acme.com' },
+  },
+};
+
+export const domainVerificationChallengeSchema = {
+  type: 'object',
+  properties: {
+    domain: { type: 'string', example: 'acme.com' },
+    verificationToken: { type: 'string' },
+    txtRecordName: {
+      type: 'string',
+      example: '_onboarding-portal.acme.com',
+    },
+    txtRecordValue: {
+      type: 'string',
+      example: 'onboarding-portal-verify=abc123',
+    },
+    expiresAt: { type: 'string', format: 'date-time' },
+  },
+};
+
+export const verifyDomainBodySchema = {
+  type: 'object',
+  required: ['token'],
+  properties: {
+    token: { type: 'string' },
+  },
+};
+
+export const billingSchema = {
+  type: 'object',
+  properties: {
+    plan: { type: 'string', enum: ['free', 'pro', 'enterprise'] },
+    activeHireLimit: { type: 'number', nullable: true, example: 5 },
+    activeHireCount: { type: 'number', example: 0 },
+    canAddActiveHire: { type: 'boolean', example: true },
+  },
+};
+
+export const updateBillingBodySchema = {
+  type: 'object',
+  required: ['plan'],
+  properties: {
+    plan: {
+      type: 'string',
+      enum: ['free', 'pro', 'enterprise'],
+      example: 'pro',
+    },
   },
 };
 

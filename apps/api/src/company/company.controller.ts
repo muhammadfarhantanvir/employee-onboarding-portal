@@ -6,16 +6,19 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -27,13 +30,19 @@ import { CompanyGuard } from '../common/guards/company.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import {
+  billingSchema,
   companySchema,
+  domainVerificationBodySchema,
+  domainVerificationChallengeSchema,
   inviteMemberBodySchema,
   logoBodySchema,
   memberSchema,
   roleBodySchema,
   transferOwnershipBodySchema,
+  updateBillingBodySchema,
   updateCompanyBodySchema,
+  verifyDomainBodySchema,
+  workspaceAvailabilitySchema,
 } from '../common/swagger.schemas';
 import { AuthenticatedUser, Role } from '../workspace/workspace.types';
 
@@ -41,6 +50,18 @@ import { AuthenticatedUser, Role } from '../workspace/workspace.types';
 @Controller('company')
 export class CompanyPublicController {
   constructor(private readonly companyService: CompanyService) {}
+
+  @ApiOperation({ summary: 'Check workspace slug and domain availability' })
+  @ApiQuery({ name: 'slug', required: false, example: 'acme' })
+  @ApiQuery({ name: 'domain', required: false, example: 'acme.com' })
+  @ApiOkResponse({ schema: workspaceAvailabilitySchema })
+  @Get('availability')
+  checkAvailability(
+    @Query('slug') slug?: string,
+    @Query('domain') domain?: string,
+  ) {
+    return this.companyService.checkAvailability(slug, domain);
+  }
 
   @ApiOperation({ summary: 'Resolve a public workspace by slug' })
   @ApiParam({ name: 'slug', example: 'demo-company' })
@@ -98,6 +119,38 @@ export class CompanyController {
     return this.companyService.updateCompany(companyId, user, body);
   }
 
+  @ApiOperation({ summary: 'Create a domain verification TXT challenge' })
+  @ApiBody({ schema: domainVerificationBodySchema, required: false })
+  @ApiOkResponse({ schema: domainVerificationChallengeSchema })
+  @ApiConflictResponse({
+    description: 'The requested domain is already registered',
+  })
+  @Roles(Role.HR_ADMIN)
+  @Post('domain/verification')
+  requestDomainVerification(
+    @CompanyId() companyId: string,
+    @Body() body: unknown,
+  ) {
+    return this.companyService.requestDomainVerification(companyId, body);
+  }
+
+  @ApiOperation({ summary: 'Verify a pending company domain challenge' })
+  @ApiBody({ schema: verifyDomainBodySchema })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: { company: companySchema },
+    },
+  })
+  @ApiConflictResponse({
+    description: 'No pending challenge, expired challenge, or invalid token',
+  })
+  @Roles(Role.HR_ADMIN)
+  @Post('domain/verify')
+  verifyDomain(@CompanyId() companyId: string, @Body() body: unknown) {
+    return this.companyService.verifyDomain(companyId, body);
+  }
+
   @ApiOperation({ summary: 'Update company logo URL' })
   @ApiBody({ schema: logoBodySchema })
   @ApiOkResponse({
@@ -128,6 +181,35 @@ export class CompanyController {
   @Get('members')
   listMembers(@CompanyId() companyId: string) {
     return this.companyService.listMembers(companyId);
+  }
+
+  @ApiOperation({ summary: 'Get billing tier and active hire limit' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: { billing: billingSchema },
+    },
+  })
+  @Get('billing')
+  getBilling(@CompanyId() companyId: string) {
+    return this.companyService.getBilling(companyId);
+  }
+
+  @ApiOperation({ summary: 'Update billing tier' })
+  @ApiBody({ schema: updateBillingBodySchema })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        billing: billingSchema,
+        company: companySchema,
+      },
+    },
+  })
+  @Roles(Role.HR_ADMIN)
+  @Patch('billing')
+  updateBillingPlan(@CompanyId() companyId: string, @Body() body: unknown) {
+    return this.companyService.updateBillingPlan(companyId, body);
   }
 
   @ApiOperation({ summary: 'Invite a member to the company workspace' })

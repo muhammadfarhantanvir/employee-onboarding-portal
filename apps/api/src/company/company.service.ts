@@ -24,14 +24,48 @@ import { WorkspaceStore } from '../workspace/workspace.store';
 import {
   AuthenticatedUser,
   BillingPlan,
+  BillingResponse,
   CompanyResponse,
+  DomainVerificationChallengeResponse,
   MemberResponse,
   Role,
+  WorkspaceAvailabilityResponse,
 } from '../workspace/workspace.types';
 
 @Injectable()
 export class CompanyService {
   constructor(private readonly workspaceStore: WorkspaceStore) {}
+
+  checkAvailability(
+    slugValue?: unknown,
+    domainValue?: unknown,
+  ): WorkspaceAvailabilityResponse {
+    const response: WorkspaceAvailabilityResponse = {};
+    const slug = this.queryValue(slugValue);
+    const domain = this.queryValue(domainValue);
+
+    if (!slug && !domain) {
+      throw new BadRequestException('slug or domain query parameter is required');
+    }
+
+    if (slug) {
+      const normalizedSlug = normalizeSlug(slug);
+      response.slug = {
+        value: normalizedSlug,
+        available: this.workspaceStore.isSlugAvailable(normalizedSlug),
+      };
+    }
+
+    if (domain) {
+      const normalizedDomain = normalizeDomain(domain);
+      response.domain = {
+        value: normalizedDomain,
+        available: this.workspaceStore.isDomainAvailable(normalizedDomain),
+      };
+    }
+
+    return response;
+  }
 
   resolveWorkspace(slugValue: string): { company: CompanyResponse } {
     const slug = normalizeSlug(slugValue);
@@ -77,10 +111,77 @@ export class CompanyService {
 
     if (compactUpdates.domain) {
       compactUpdates.domainVerifiedAt = new Date().toISOString();
+      compactUpdates.pendingDomain = null;
+      compactUpdates.domainVerificationTokenHash = null;
+      compactUpdates.domainVerificationExpiresAt = null;
     }
 
     const company = this.workspaceStore.updateCompany(companyId, compactUpdates);
     return {
+      company: this.workspaceStore.companyResponse(company),
+    };
+  }
+
+  requestDomainVerification(
+    companyId: string,
+    bodyValue: unknown,
+  ): DomainVerificationChallengeResponse {
+    const body = requireBody(bodyValue ?? {});
+    const company = this.workspaceStore.requireCompany(companyId);
+    const requestedDomain =
+      readOptionalString(body, 'domain', { max: 255 }) ?? company.domain;
+    const domain = normalizeDomain(requestedDomain);
+
+    return this.workspaceStore.createDomainVerificationChallenge(
+      companyId,
+      domain,
+    );
+  }
+
+  verifyDomain(
+    companyId: string,
+    bodyValue: unknown,
+  ): { company: CompanyResponse } {
+    const body = requireBody(bodyValue);
+    const token = readRequiredString(body, 'token', { min: 20 });
+    const company = this.workspaceStore.verifyDomainChallenge(companyId, token);
+    return {
+      company: this.workspaceStore.companyResponse(company),
+    };
+  }
+
+  getBilling(companyId: string): { billing: BillingResponse } {
+    const company = this.workspaceStore.requireCompany(companyId);
+    return {
+      billing: this.workspaceStore.billingResponse(company),
+    };
+  }
+
+  updateBillingPlan(
+    companyId: string,
+    bodyValue: unknown,
+  ): { billing: BillingResponse; company: CompanyResponse } {
+    const body = requireBody(bodyValue);
+    const plan = readBillingPlan(body, 'plan');
+    if (!plan) {
+      throw new BadRequestException('plan is required');
+    }
+
+    if (
+      plan === BillingPlan.FREE &&
+      !this.workspaceStore.canAddActiveHire(
+        companyId,
+        this.workspaceStore.getActiveHireCount(companyId),
+      )
+    ) {
+      throw new BadRequestException(
+        'Cannot downgrade to Free while the workspace has more than 5 active hires',
+      );
+    }
+
+    const company = this.workspaceStore.updateCompany(companyId, { plan });
+    return {
+      billing: this.workspaceStore.billingResponse(company),
       company: this.workspaceStore.companyResponse(company),
     };
   }
@@ -260,5 +361,13 @@ export class CompanyService {
   private optionalTimezone(body: Record<string, unknown>): string | undefined {
     const timezone = readOptionalString(body, 'timezone');
     return timezone ? normalizeTimezone(timezone) : undefined;
+  }
+
+  private queryValue(value: unknown): string | undefined {
+    if (Array.isArray(value)) {
+      const first = value[0];
+      return typeof first === 'string' ? first : undefined;
+    }
+    return typeof value === 'string' ? value : undefined;
   }
 }
