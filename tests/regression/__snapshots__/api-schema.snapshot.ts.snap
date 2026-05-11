@@ -1,0 +1,1259 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`API schema snapshots GET /api response shape is stable: system root 1`] = `
+{
+  "name": "string",
+  "routes": {
+    "auth": "string",
+    "company": "string",
+    "docs": "string",
+    "health": "string",
+  },
+  "status": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/analytics/active-hires response shape is stable: analytics active hires 1`] = `
+{
+  "byStatus": {
+    "at_risk": "number",
+    "cancelled": "number",
+    "completed": "number",
+    "in_progress": "number",
+    "pending_invite": "number",
+  },
+  "count": "number",
+  "hires": [
+    {
+      "completedTaskCount": "number",
+      "completionPct": "number",
+      "daysActive": "number",
+      "daysRemaining": "number",
+      "department": "string",
+      "email": "string",
+      "fullName": "string",
+      "id": "string",
+      "jobTitle": "string",
+      "managerId": "string",
+      "overdueTaskCount": "number",
+      "pendingTaskCount": "number",
+      "phaseProgress": {
+        "month_1": {
+          "completed": "number",
+          "total": "number",
+        },
+        "month_3": {
+          "completed": "number",
+          "total": "number",
+        },
+        "pre_boarding": {
+          "completed": "number",
+          "total": "number",
+        },
+        "week_1": {
+          "completed": "number",
+          "total": "number",
+        },
+      },
+      "startDate": "string",
+      "status": "string",
+      "totalTaskCount": "number",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/analytics/completion-by-department response shape is stable: analytics department 1`] = `
+[
+  {
+    "atRiskCount": "number",
+    "avgCompletionPct": "number",
+    "completedHires": "number",
+    "completionRate": "number",
+    "department": "string",
+    "totalHires": "number",
+  },
+]
+`;
+
+exports[`API schema snapshots GET /api/analytics/document-review-queue response shape is stable: analytics docs 1`] = `
+{
+  "count": "number",
+  "documents": [
+    {
+      "category": "string",
+      "daysWaiting": "number",
+      "documentId": "string",
+      "documentName": "string",
+      "hireFullName": "null",
+      "hireId": "null",
+      "isCompanyDoc": "boolean",
+      "uploadedAt": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/analytics/hire-cohort response shape is stable: analytics cohort 1`] = `
+[
+  {
+    "atRisk": "number",
+    "completed": "number",
+    "invited": "number",
+    "month": "string",
+  },
+]
+`;
+
+exports[`API schema snapshots GET /api/analytics/overdue-tasks response shape is stable: analytics overdue 1`] = `
+{
+  "count": "number",
+  "tasks": [],
+}
+`;
+
+exports[`API schema snapshots GET /api/analytics/overview response shape is stable: analytics overview 1`] = `
+{
+  "activeHires": "number",
+  "atRiskHires": "number",
+  "avgCompletionPct": "number",
+  "completedThisMonth": "number",
+  "completionRate": "number",
+  "overdueTaskCount": "number",
+  "pendingDocuments": "number",
+  "pendingInvites": "number",
+  "refreshedAt": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/analytics/phase-time response shape is stable: analytics phase time 1`] = `
+[
+  {
+    "avgDaysToComplete": "number",
+    "completedCount": "number",
+    "overdueCount": "number",
+    "pendingCount": "number",
+    "phase": "string",
+  },
+]
+`;
+
+exports[`API schema snapshots GET /api/analytics/realtime-config response shape is stable: analytics realtime 1`] = `
+{
+  "channel": "string",
+  "description": "string",
+  "events": {
+    "documents": [
+      "string",
+    ],
+    "hire_tasks": [
+      "string",
+    ],
+    "hires": [
+      "string",
+    ],
+    "notifications": [
+      "string",
+    ],
+  },
+  "supabaseUrl": "string",
+  "tables": [
+    "string",
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/analytics/report/hire/hire-0001-0001-0001-000000000001 response shape is stable: analytics hire report 1`] = `
+{
+  "generatedAt": "string",
+  "hire": {
+    "completedAt": "null",
+    "completionPct": "number",
+    "department": "string",
+    "email": "string",
+    "fullName": "string",
+    "id": "string",
+    "invitedAt": "string",
+    "jobTitle": "string",
+    "startDate": "string",
+    "startedAt": "string",
+    "status": "string",
+  },
+  "overdueTasks": [],
+  "phaseBreakdown": [
+    {
+      "completed": "number",
+      "overdue": "number",
+      "pending": "number",
+      "phase": "string",
+      "total": "number",
+    },
+  ],
+  "summary": {
+    "blockedTasks": "number",
+    "completedTasks": "number",
+    "completionPct": "number",
+    "overdueTaskCount": "number",
+    "pendingTasks": "number",
+    "skippedTasks": "number",
+    "totalTasks": "number",
+  },
+}
+`;
+
+exports[`API schema snapshots GET /api/auth/me response shape is stable: me 1`] = `
+{
+  "company": {
+    "activeHireCount": "number",
+    "activeHireLimit": "null",
+    "brandColor": "string",
+    "createdAt": "string",
+    "domain": "string",
+    "domainVerificationExpiresAt": "null",
+    "domainVerificationStatus": "string",
+    "domainVerifiedAt": "string",
+    "id": "string",
+    "locale": "string",
+    "logoUrl": "null",
+    "name": "string",
+    "ownerUserId": "string",
+    "pendingDomain": "null",
+    "plan": "string",
+    "slug": "string",
+    "timezone": "string",
+    "updatedAt": "string",
+  },
+  "user": {
+    "avatarUrl": "null",
+    "companyId": "string",
+    "createdAt": "string",
+    "department": "null",
+    "email": "string",
+    "fullName": "string",
+    "id": "string",
+    "invitedByUserId": "null",
+    "isActive": "boolean",
+    "isOwner": "boolean",
+    "jobTitle": "null",
+    "phone": "null",
+    "role": "string",
+    "updatedAt": "string",
+  },
+}
+`;
+
+exports[`API schema snapshots GET /api/company response shape is stable: company get 1`] = `
+{
+  "company": {
+    "activeHireCount": "number",
+    "activeHireLimit": "null",
+    "brandColor": "string",
+    "createdAt": "string",
+    "domain": "string",
+    "domainVerificationExpiresAt": "null",
+    "domainVerificationStatus": "string",
+    "domainVerifiedAt": "string",
+    "id": "string",
+    "locale": "string",
+    "logoUrl": "null",
+    "name": "string",
+    "ownerUserId": "string",
+    "pendingDomain": "null",
+    "plan": "string",
+    "slug": "string",
+    "timezone": "string",
+    "updatedAt": "string",
+  },
+}
+`;
+
+exports[`API schema snapshots GET /api/company/availability?slug=journey-gmbh&domain=journey.test response shape is stable: company availability 1`] = `
+{
+  "domain": {
+    "available": "boolean",
+    "value": "string",
+  },
+  "slug": {
+    "available": "boolean",
+    "value": "string",
+  },
+}
+`;
+
+exports[`API schema snapshots GET /api/company/billing response shape is stable: company billing 1`] = `
+{
+  "billing": {
+    "activeHireCount": "number",
+    "activeHireLimit": "null",
+    "canAddActiveHire": "boolean",
+    "plan": "string",
+  },
+}
+`;
+
+exports[`API schema snapshots GET /api/company/members response shape is stable: company members 1`] = `
+{
+  "members": [
+    {
+      "avatarUrl": "null",
+      "companyId": "string",
+      "createdAt": "string",
+      "department": "null",
+      "email": "string",
+      "fullName": "string",
+      "id": "string",
+      "invitedByUserId": "null",
+      "isActive": "boolean",
+      "isOwner": "boolean",
+      "jobTitle": "null",
+      "phone": "null",
+      "role": "string",
+      "updatedAt": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/company/resolve/demo-company response shape is stable: company resolve 1`] = `
+{
+  "company": {
+    "activeHireCount": "number",
+    "activeHireLimit": "null",
+    "brandColor": "string",
+    "createdAt": "string",
+    "domain": "string",
+    "domainVerificationExpiresAt": "null",
+    "domainVerificationStatus": "string",
+    "domainVerifiedAt": "string",
+    "id": "string",
+    "locale": "string",
+    "logoUrl": "null",
+    "name": "string",
+    "ownerUserId": "string",
+    "pendingDomain": "null",
+    "plan": "string",
+    "slug": "string",
+    "timezone": "string",
+    "updatedAt": "string",
+  },
+}
+`;
+
+exports[`API schema snapshots GET /api/documents/company response shape is stable: company documents 1`] = `
+{
+  "byCategory": {
+    "certificate": "number",
+    "contract": "number",
+    "other": "number",
+    "personal_id": "number",
+    "policy": "number",
+    "tax_form": "number",
+    "training": "number",
+  },
+  "byStatus": {
+    "approved": "number",
+    "pending_review": "number",
+    "rejected": "number",
+    "superseded": "number",
+  },
+  "count": "number",
+  "documents": [
+    {
+      "category": "string",
+      "checksum": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "filePath": "string",
+      "fileSize": "number",
+      "gdprBasis": "string",
+      "hireId": "null",
+      "hireTaskId": "null",
+      "id": "string",
+      "isCompanyDoc": "boolean",
+      "mimeType": "string",
+      "name": "string",
+      "originalName": "string",
+      "parentId": "null",
+      "rejectionNote": "null",
+      "retentionUntil": "string",
+      "reviewedAt": "string",
+      "reviewedBy": "string",
+      "status": "string",
+      "updatedAt": "string",
+      "uploadedBy": "string",
+      "version": "number",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/documents/doc-0001-0001-0001-000000000001/acknowledgements response shape is stable: document acknowledgements 1`] = `
+{
+  "acknowledgements": [
+    {
+      "acknowledgedAt": "string",
+      "documentId": "string",
+      "hireId": "string",
+      "hireTaskId": "null",
+      "id": "string",
+      "ipAddress": "string",
+      "userAgent": "string",
+      "userId": "string",
+    },
+  ],
+  "count": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/documents/doc-0001-0001-0001-000000000001/url response shape is stable: document signed url 1`] = `
+{
+  "documentId": "string",
+  "expiresAt": "string",
+  "url": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/documents/doc-0001-0001-0001-000000000001/versions response shape is stable: document versions 1`] = `
+{
+  "current": {
+    "category": "string",
+    "checksum": "string",
+    "companyId": "string",
+    "createdAt": "string",
+    "filePath": "string",
+    "fileSize": "number",
+    "gdprBasis": "string",
+    "hireId": "null",
+    "hireTaskId": "null",
+    "id": "string",
+    "isCompanyDoc": "boolean",
+    "mimeType": "string",
+    "name": "string",
+    "originalName": "string",
+    "parentId": "null",
+    "rejectionNote": "null",
+    "retentionUntil": "string",
+    "reviewedAt": "string",
+    "reviewedBy": "string",
+    "status": "string",
+    "updatedAt": "string",
+    "uploadedBy": "string",
+    "version": "number",
+  },
+  "history": [],
+}
+`;
+
+exports[`API schema snapshots GET /api/documents/doc-0004-0004-0004-000000000004 response shape is stable: document get 1`] = `
+{
+  "category": "string",
+  "checksum": "string",
+  "companyId": "string",
+  "createdAt": "string",
+  "filePath": "string",
+  "fileSize": "number",
+  "gdprBasis": "string",
+  "hireId": "string",
+  "hireTaskId": "string",
+  "id": "string",
+  "isCompanyDoc": "boolean",
+  "mimeType": "string",
+  "name": "string",
+  "originalName": "string",
+  "parentId": "null",
+  "rejectionNote": "null",
+  "retentionUntil": "string",
+  "reviewedAt": "null",
+  "reviewedBy": "null",
+  "status": "string",
+  "updatedAt": "string",
+  "uploadedBy": "string",
+  "version": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/documents/hire/hire-0001-0001-0001-000000000001 response shape is stable: hire documents 1`] = `
+{
+  "byCategory": {
+    "certificate": "number",
+    "contract": "number",
+    "other": "number",
+    "personal_id": "number",
+    "policy": "number",
+    "tax_form": "number",
+    "training": "number",
+  },
+  "byStatus": {
+    "approved": "number",
+    "pending_review": "number",
+    "rejected": "number",
+    "superseded": "number",
+  },
+  "count": "number",
+  "documents": [
+    {
+      "category": "string",
+      "checksum": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "filePath": "string",
+      "fileSize": "number",
+      "gdprBasis": "string",
+      "hireId": "string",
+      "hireTaskId": "string",
+      "id": "string",
+      "isCompanyDoc": "boolean",
+      "mimeType": "string",
+      "name": "string",
+      "originalName": "string",
+      "parentId": "null",
+      "rejectionNote": "null",
+      "retentionUntil": "string",
+      "reviewedAt": "null",
+      "reviewedBy": "null",
+      "status": "string",
+      "updatedAt": "string",
+      "uploadedBy": "string",
+      "version": "number",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/documents/pending-review response shape is stable: pending documents 1`] = `
+{
+  "byCategory": {
+    "certificate": "number",
+    "contract": "number",
+    "other": "number",
+    "personal_id": "number",
+    "policy": "number",
+    "tax_form": "number",
+    "training": "number",
+  },
+  "byStatus": {
+    "approved": "number",
+    "pending_review": "number",
+    "rejected": "number",
+    "superseded": "number",
+  },
+  "count": "number",
+  "documents": [
+    {
+      "category": "string",
+      "checksum": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "filePath": "string",
+      "fileSize": "number",
+      "gdprBasis": "string",
+      "hireId": "null",
+      "hireTaskId": "null",
+      "id": "string",
+      "isCompanyDoc": "boolean",
+      "mimeType": "string",
+      "name": "string",
+      "originalName": "string",
+      "parentId": "null",
+      "rejectionNote": "null",
+      "retentionUntil": "string",
+      "reviewedAt": "null",
+      "reviewedBy": "null",
+      "status": "string",
+      "updatedAt": "string",
+      "uploadedBy": "string",
+      "version": "number",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/gdpr/access-log response shape is stable: gdpr access log 1`] = `
+{
+  "count": "number",
+  "entries": [
+    {
+      "action": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "entityId": "string",
+      "entityType": "string",
+      "id": "string",
+      "ipAddress": "string",
+      "metadata": {
+        "documentName": "string",
+      },
+      "userAgent": "string",
+      "userId": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/gdpr/erasure-requests response shape is stable: gdpr erasure list 1`] = `
+{
+  "count": "number",
+  "requests": [],
+}
+`;
+
+exports[`API schema snapshots GET /api/gdpr/export/hire/hire-0001-0001-0001-000000000001 response shape is stable: gdpr hire export 1`] = `
+{
+  "accessLog": [
+    {
+      "action": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "entityId": "string",
+      "entityType": "string",
+      "id": "string",
+      "ipAddress": "null",
+      "metadata": {
+        "exportedFields": [
+          "string",
+        ],
+      },
+      "userAgent": "null",
+      "userId": "null",
+    },
+  ],
+  "companyId": "string",
+  "documents": [
+    {
+      "category": "string",
+      "createdAt": "string",
+      "gdprBasis": "string",
+      "id": "string",
+      "name": "string",
+      "retentionUntil": "string",
+      "status": "string",
+      "version": "number",
+    },
+  ],
+  "exportedAt": "string",
+  "hire": {
+    "completedAt": "null",
+    "completionPct": "number",
+    "createdAt": "string",
+    "department": "string",
+    "email": "string",
+    "fullName": "string",
+    "id": "string",
+    "invitedAt": "string",
+    "jobTitle": "string",
+    "notes": "string",
+    "startDate": "string",
+    "startedAt": "string",
+    "status": "string",
+  },
+  "hireId": "string",
+  "notifications": [],
+  "tasks": [
+    {
+      "completedAt": "string",
+      "dueDate": "string",
+      "id": "string",
+      "note": "null",
+      "phase": "string",
+      "status": "string",
+      "taskType": "string",
+      "title": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/gdpr/privacy-policy response shape is stable: gdpr privacy policy 1`] = `
+{
+  "current": {
+    "companyId": "string",
+    "contentUrl": "string",
+    "createdAt": "string",
+    "createdBy": "string",
+    "effectiveAt": "string",
+    "id": "string",
+    "isCurrent": "boolean",
+    "version": "string",
+  },
+  "policies": [
+    {
+      "companyId": "string",
+      "contentUrl": "string",
+      "createdAt": "string",
+      "createdBy": "string",
+      "effectiveAt": "string",
+      "id": "string",
+      "isCurrent": "boolean",
+      "version": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/gdpr/privacy-policy/pp-0001-0001-0001-000000000001/acknowledgements response shape is stable: gdpr privacy acknowledgements 1`] = `
+{
+  "acknowledgements": [
+    {
+      "ackedAt": "string",
+      "companyId": "string",
+      "id": "string",
+      "ipAddress": "string",
+      "policyId": "string",
+      "userId": "string",
+    },
+  ],
+  "count": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/gdpr/retention/expired response shape is stable: gdpr retention expired 1`] = `
+{
+  "count": "number",
+  "documents": [],
+}
+`;
+
+exports[`API schema snapshots GET /api/health response shape is stable: health 1`] = `
+{
+  "status": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/hires response shape is stable: hires list 1`] = `
+{
+  "byStatus": {
+    "at_risk": "number",
+    "cancelled": "number",
+    "completed": "number",
+    "in_progress": "number",
+    "pending_invite": "number",
+  },
+  "count": "number",
+  "hires": [
+    {
+      "cancelledAt": "null",
+      "companyId": "string",
+      "completedAt": "null",
+      "completionPct": "number",
+      "createdAt": "string",
+      "createdBy": "string",
+      "department": "string",
+      "email": "string",
+      "fullName": "string",
+      "id": "string",
+      "invitedAt": "string",
+      "jobTitle": "string",
+      "managerId": "string",
+      "notes": "string",
+      "startDate": "string",
+      "startedAt": "string",
+      "status": "string",
+      "templateId": "string",
+      "updatedAt": "string",
+      "userId": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/hires/hire-0001-0001-0001-000000000001 response shape is stable: hire get 1`] = `
+{
+  "cancelledAt": "null",
+  "companyId": "string",
+  "completedAt": "null",
+  "completionPct": "number",
+  "createdAt": "string",
+  "createdBy": "string",
+  "department": "string",
+  "email": "string",
+  "fullName": "string",
+  "id": "string",
+  "invitedAt": "string",
+  "jobTitle": "string",
+  "managerId": "string",
+  "notes": "string",
+  "startDate": "string",
+  "startedAt": "string",
+  "status": "string",
+  "tasks": [
+    {
+      "assignedRole": "string",
+      "assignedTo": "null",
+      "companyId": "string",
+      "completedAt": "string",
+      "createdAt": "string",
+      "description": "null",
+      "dueDate": "string",
+      "hireId": "string",
+      "id": "string",
+      "isRequired": "boolean",
+      "note": "null",
+      "phase": "string",
+      "skippedAt": "null",
+      "sortOrder": "number",
+      "status": "string",
+      "taskType": "string",
+      "templateTaskId": "string",
+      "title": "string",
+      "updatedAt": "string",
+    },
+  ],
+  "templateId": "string",
+  "updatedAt": "string",
+  "userId": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/it-checklists response shape is stable: it checklists 1`] = `
+{
+  "byStatus": {
+    "blocked": "number",
+    "completed": "number",
+    "in_progress": "number",
+    "pending": "number",
+  },
+  "checklists": [
+    {
+      "assignedTo": "string",
+      "companyId": "string",
+      "completedAt": "null",
+      "completionPct": "number",
+      "createdAt": "string",
+      "dueDate": "string",
+      "hireId": "string",
+      "id": "string",
+      "items": [
+        {
+          "assetTag": "string",
+          "category": "string",
+          "checklistId": "string",
+          "companyId": "string",
+          "completedAt": "string",
+          "completedBy": "string",
+          "createdAt": "string",
+          "description": "string",
+          "id": "string",
+          "isRequired": "boolean",
+          "note": "null",
+          "serialNumber": "string",
+          "sortOrder": "number",
+          "status": "string",
+          "templateItemId": "string",
+          "title": "string",
+          "updatedAt": "string",
+        },
+      ],
+      "notes": "string",
+      "status": "string",
+      "templateId": "string",
+      "updatedAt": "string",
+    },
+  ],
+  "count": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/it-checklists/hire/hire-0001-0001-0001-000000000001 response shape is stable: it checklist by hire 1`] = `
+{
+  "assignedTo": "string",
+  "companyId": "string",
+  "completedAt": "null",
+  "completionPct": "number",
+  "createdAt": "string",
+  "dueDate": "string",
+  "hireId": "string",
+  "id": "string",
+  "items": [
+    {
+      "assetTag": "string",
+      "category": "string",
+      "checklistId": "string",
+      "companyId": "string",
+      "completedAt": "string",
+      "completedBy": "string",
+      "createdAt": "string",
+      "description": "string",
+      "id": "string",
+      "isRequired": "boolean",
+      "note": "null",
+      "serialNumber": "string",
+      "sortOrder": "number",
+      "status": "string",
+      "templateItemId": "string",
+      "title": "string",
+      "updatedAt": "string",
+    },
+  ],
+  "notes": "string",
+  "status": "string",
+  "templateId": "string",
+  "updatedAt": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/it-checklists/it-cl-0001-0001-0001-000000000001 response shape is stable: it checklist get 1`] = `
+{
+  "assignedTo": "string",
+  "companyId": "string",
+  "completedAt": "null",
+  "completionPct": "number",
+  "createdAt": "string",
+  "dueDate": "string",
+  "hireId": "string",
+  "id": "string",
+  "items": [
+    {
+      "assetTag": "string",
+      "category": "string",
+      "checklistId": "string",
+      "companyId": "string",
+      "completedAt": "string",
+      "completedBy": "string",
+      "createdAt": "string",
+      "description": "string",
+      "id": "string",
+      "isRequired": "boolean",
+      "note": "null",
+      "serialNumber": "string",
+      "sortOrder": "number",
+      "status": "string",
+      "templateItemId": "string",
+      "title": "string",
+      "updatedAt": "string",
+    },
+  ],
+  "notes": "string",
+  "status": "string",
+  "templateId": "string",
+  "updatedAt": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/it-checklists/mine response shape is stable: it checklists mine 1`] = `
+{
+  "byStatus": {
+    "blocked": "number",
+    "completed": "number",
+    "in_progress": "number",
+    "pending": "number",
+  },
+  "checklists": [],
+  "count": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/it-checklists/templates response shape is stable: it templates 1`] = `
+{
+  "count": "number",
+  "templates": [
+    {
+      "companyId": "string",
+      "createdAt": "string",
+      "createdBy": "string",
+      "description": "string",
+      "id": "string",
+      "isDefault": "boolean",
+      "items": [
+        {
+          "category": "string",
+          "companyId": "string",
+          "createdAt": "string",
+          "description": "string",
+          "id": "string",
+          "isRequired": "boolean",
+          "sortOrder": "number",
+          "templateId": "string",
+          "title": "string",
+        },
+      ],
+      "name": "string",
+      "updatedAt": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/it-checklists/templates/it-tpl-0001-0001-0001-000000000001 response shape is stable: it template get 1`] = `
+{
+  "companyId": "string",
+  "createdAt": "string",
+  "createdBy": "string",
+  "description": "string",
+  "id": "string",
+  "isDefault": "boolean",
+  "items": [
+    {
+      "category": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "description": "string",
+      "id": "string",
+      "isRequired": "boolean",
+      "sortOrder": "number",
+      "templateId": "string",
+      "title": "string",
+    },
+  ],
+  "name": "string",
+  "updatedAt": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/manager/dashboard response shape is stable: manager dashboard 1`] = `
+{
+  "error": "string",
+  "message": "string",
+  "statusCode": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/manager/hires/hire-0001-0001-0001-000000000001 response shape is stable: manager hire get 1`] = `
+{
+  "error": "string",
+  "message": "string",
+  "statusCode": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/manager/hires/hire-0001-0001-0001-000000000001/notes response shape is stable: manager notes 1`] = `
+{
+  "error": "string",
+  "message": "string",
+  "statusCode": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/manager/hires/hire-0001-0001-0001-000000000001/phases response shape is stable: manager phases 1`] = `
+{
+  "error": "string",
+  "message": "string",
+  "statusCode": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/manager/hires/hire-0001-0001-0001-000000000001/reupload-requests response shape is stable: manager reupload list 1`] = `
+{
+  "error": "string",
+  "message": "string",
+  "statusCode": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/notifications response shape is stable: notifications list 1`] = `
+{
+  "count": "number",
+  "notifications": [
+    {
+      "body": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "id": "string",
+      "isRead": "boolean",
+      "link": "string",
+      "metadata": {
+        "documentId": "string",
+        "hireId": "string",
+      },
+      "readAt": "null",
+      "title": "string",
+      "type": "string",
+      "userId": "string",
+    },
+  ],
+  "unreadCount": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/notifications/email-log response shape is stable: email log 1`] = `
+{
+  "byStatus": {
+    "bounced": "number",
+    "failed": "number",
+    "queued": "number",
+    "sent": "number",
+  },
+  "count": "number",
+  "emails": [],
+}
+`;
+
+exports[`API schema snapshots GET /api/notifications/jobs response shape is stable: jobs list 1`] = `
+{
+  "byStatus": {
+    "cancelled": "number",
+    "completed": "number",
+    "failed": "number",
+    "pending": "number",
+    "running": "number",
+  },
+  "count": "number",
+  "jobs": [
+    {
+      "attempts": "number",
+      "companyId": "string",
+      "completedAt": "null",
+      "createdAt": "string",
+      "failedAt": "null",
+      "id": "string",
+      "lastError": "null",
+      "maxAttempts": "number",
+      "payload": {
+        "hireId": "string",
+        "taskId": "string",
+        "taskTitle": "string",
+      },
+      "scheduledAt": "string",
+      "startedAt": "null",
+      "status": "string",
+      "type": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/notifications/unread-count response shape is stable: notifications unread 1`] = `
+{
+  "count": "number",
+}
+`;
+
+exports[`API schema snapshots GET /api/tasks response shape is stable: tasks mine 1`] = `
+{
+  "count": "number",
+  "tasks": [],
+}
+`;
+
+exports[`API schema snapshots GET /api/tasks/hire/hire-0001-0001-0001-000000000001 response shape is stable: tasks by hire 1`] = `
+{
+  "byPhase": {
+    "month_1": "number",
+    "month_3": "number",
+    "pre_boarding": "number",
+    "week_1": "number",
+  },
+  "byStatus": {
+    "blocked": "number",
+    "completed": "number",
+    "in_progress": "number",
+    "pending": "number",
+    "skipped": "number",
+  },
+  "completionPct": "number",
+  "count": "number",
+  "tasks": [
+    {
+      "assignedRole": "string",
+      "assignedTo": "null",
+      "companyId": "string",
+      "completedAt": "string",
+      "createdAt": "string",
+      "description": "null",
+      "dueDate": "string",
+      "hireId": "string",
+      "id": "string",
+      "isRequired": "boolean",
+      "note": "null",
+      "phase": "string",
+      "skippedAt": "null",
+      "sortOrder": "number",
+      "status": "string",
+      "taskType": "string",
+      "templateTaskId": "string",
+      "title": "string",
+      "updatedAt": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/tasks/htask-0003?hireId=hire-0001-0001-0001-000000000001 response shape is stable: task get 1`] = `
+{
+  "assignedRole": "string",
+  "assignedTo": "null",
+  "companyId": "string",
+  "completedAt": "null",
+  "createdAt": "string",
+  "description": "string",
+  "dueDate": "string",
+  "hireId": "string",
+  "id": "string",
+  "isRequired": "boolean",
+  "note": "null",
+  "phase": "string",
+  "skippedAt": "null",
+  "sortOrder": "number",
+  "status": "string",
+  "taskType": "string",
+  "templateTaskId": "string",
+  "title": "string",
+  "updatedAt": "string",
+}
+`;
+
+exports[`API schema snapshots GET /api/templates response shape is stable: templates list 1`] = `
+{
+  "count": "number",
+  "templates": [
+    {
+      "companyId": "string",
+      "createdAt": "string",
+      "createdBy": "string",
+      "department": "string",
+      "description": "string",
+      "id": "string",
+      "isDefault": "boolean",
+      "name": "string",
+      "tasks": [
+        {
+          "assignedRole": "string",
+          "companyId": "string",
+          "createdAt": "string",
+          "description": "string",
+          "dueDayOffset": "number",
+          "id": "string",
+          "isRequired": "boolean",
+          "phase": "string",
+          "sortOrder": "number",
+          "taskType": "string",
+          "templateId": "string",
+          "title": "string",
+          "updatedAt": "string",
+        },
+      ],
+      "updatedAt": "string",
+    },
+  ],
+}
+`;
+
+exports[`API schema snapshots GET /api/templates/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa response shape is stable: template get 1`] = `
+{
+  "companyId": "string",
+  "createdAt": "string",
+  "createdBy": "string",
+  "department": "string",
+  "description": "string",
+  "id": "string",
+  "isDefault": "boolean",
+  "name": "string",
+  "tasks": [
+    {
+      "assignedRole": "string",
+      "companyId": "string",
+      "createdAt": "string",
+      "description": "string",
+      "dueDayOffset": "number",
+      "id": "string",
+      "isRequired": "boolean",
+      "phase": "string",
+      "sortOrder": "number",
+      "taskType": "string",
+      "templateId": "string",
+      "title": "string",
+      "updatedAt": "string",
+    },
+  ],
+  "updatedAt": "string",
+}
+`;

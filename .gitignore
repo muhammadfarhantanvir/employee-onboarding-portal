@@ -13,10 +13,13 @@ out/
 .env
 .env.*
 !.env.example
+!.env.test.example
 
 # Logs
 *.log
 npm-debug.log*
+playwright-report/
+.stryker-tmp/
 
 # OS
 .DS_Store

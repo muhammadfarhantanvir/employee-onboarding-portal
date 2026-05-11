@@ -4,6 +4,7 @@
   Post,
   Patch,
   Delete,
+  BadRequestException,
   Param,
   Body,
   Query,
@@ -211,7 +212,7 @@ export class NotificationsController {
   ) {
     const scheduledAt = new Date(body?.scheduledAt ?? Date.now());
     if (isNaN(scheduledAt.getTime())) {
-      throw new Error('scheduledAt must be a valid ISO date-time string');
+      throw new BadRequestException('scheduledAt must be a valid ISO date-time string');
     }
     return this.notificationsService.scheduleJob(
       companyId,
@@ -379,7 +380,7 @@ export class NotificationsController {
         break;
 
       default:
-        throw new Error(`Unknown workflow event: "${event}"`);
+        throw new BadRequestException(`Unknown workflow event: "${event}"`);
     }
 
     return {

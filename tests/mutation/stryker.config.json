@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-js/master/packages/api/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "command",
+  "commandRunner": {
+    "command": "npm run test -- --runInBand"
+  },
+  "files": [
+    "apps/api/src/**/*.ts",
+    "tests/**/*.ts",
+    "prisma/seed.test.ts",
+    "jest.config.ts",
+    "tsconfig.spec.json",
+    "package.json"
+  ],
+  "tsconfigFile": "tsconfig.spec.json",
+  "mutate": [
+    "apps/api/src/**/*.service.ts",
+    "apps/api/src/**/*.guard.ts",
+    "!apps/api/src/**/*.module.ts",
+    "!apps/api/src/**/*.controller.ts"
+  ],
+  "mutator": {
+    "excludedMutations": [],
+    "plugins": [
+      "ArithmeticOperator",
+      "ConditionalExpression",
+      "EqualityOperator",
+      "LogicalOperator",
+      "BlockStatement",
+      "StringLiteral"
+    ]
+  },
+  "coverageAnalysis": "off",
+  "thresholds": {
+    "high": 70,
+    "low": 60,
+    "break": 50
+  },
+  "reporters": ["progress", "clear-text", "html"]
+}

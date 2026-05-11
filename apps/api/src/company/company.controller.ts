@@ -31,6 +31,7 @@ import {
   Permission,
   RequirePermissions,
 } from '../common/rbac';
+import { Public } from '../common/decorators/public.decorator';
 import {
   billingSchema,
   companySchema,
@@ -49,6 +50,7 @@ import {
 import { AuthenticatedUser } from '../workspace/workspace.types';
 
 @ApiTags('Company')
+@Public()
 @Controller('company')
 export class CompanyPublicController {
   constructor(private readonly companyService: CompanyService) {}
@@ -296,4 +298,3 @@ export class CompanyController {
     return this.companyService.transferOwnership(companyId, user, body);
   }
 }
-

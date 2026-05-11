@@ -1,4 +1,4 @@
-﻿import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -12,7 +12,6 @@ import {
 import { AuthService } from './auth.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../common/http.types';
 import {
   acceptInviteBodySchema,
@@ -46,6 +45,7 @@ export class AuthController {
   @ApiBody({ schema: loginBodySchema })
   @ApiOkResponse({ schema: authResponseSchema })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials or inactive member' })
+  @HttpCode(200)
   @Post('login')
   login(@Body() body: unknown, @Req() request: AuthenticatedRequest) {
     return this.authService.login(body, request);
@@ -56,6 +56,7 @@ export class AuthController {
   @ApiBody({ schema: refreshBodySchema })
   @ApiOkResponse({ schema: authResponseSchema })
   @ApiUnauthorizedResponse({ description: 'Invalid or revoked refresh token' })
+  @HttpCode(200)
   @Post('refresh')
   refresh(@Body() body: unknown) {
     return this.authService.refresh(body);
@@ -66,7 +67,8 @@ export class AuthController {
   @ApiBody({ schema: logoutBodySchema, required: false })
   @ApiOkResponse({ schema: successSchema })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid bearer token' })
-    @Post('logout')
+  @HttpCode(200)
+  @Post('logout')
   logout(@Body() body: unknown, @CurrentUser() user: AuthenticatedUser) {
     return this.authService.logout(body, user);
   }
@@ -75,7 +77,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get the current user and company workspace' })
   @ApiOkResponse({ schema: currentContextSchema })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid bearer token' })
-    @Get('me')
+  @Get('me')
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.me(user);
   }

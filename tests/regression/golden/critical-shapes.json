@@ -1,0 +1,42 @@
+{
+  "health": {
+    "status": "string"
+  },
+  "me": {
+    "company": "object",
+    "user": "object"
+  },
+  "hires": {
+    "byStatus": "object",
+    "count": "number",
+    "hires": "object"
+  },
+  "tasks": {
+    "count": "number",
+    "tasks": "object"
+  },
+  "notificationsUnread": {
+    "count": "number"
+  },
+  "analyticsOverview": {
+    "activeHires": "number"
+  },
+  "companyDocuments": {
+    "count": "number",
+    "documents": "object"
+  },
+  "itMine": {
+    "checklists": "object",
+    "count": "number"
+  },
+  "managerDashboard": {
+    "count": "number",
+    "hires": "object",
+    "summary": "object"
+  },
+  "hireReport": {
+    "generatedAt": "string",
+    "hire": "object",
+    "summary": "object"
+  }
+}

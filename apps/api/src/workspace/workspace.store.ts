@@ -616,6 +616,14 @@ export class WorkspaceStore {
         Role.NEW_HIRE,
         now,
       ),
+      this.demoUser(
+        '66666666-6666-4666-8666-666666666666',
+        companyId,
+        'viewer@demo-company.com',
+        'Victor Viewer',
+        Role.VIEWER,
+        now,
+      ),
     ];
 
     this.companies.set(company.id, company);

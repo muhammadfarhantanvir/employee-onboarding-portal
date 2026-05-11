@@ -1,0 +1,28 @@
+// tsconfig.spec.json
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2021",
+    "lib": ["ES2021", "DOM"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@nestjs/core": ["apps/api/node_modules/@nestjs/core"],
+      "@nestjs/core/*": ["apps/api/node_modules/@nestjs/core/*"],
+      "@nestjs/platform-express": ["apps/api/node_modules/@nestjs/platform-express"],
+      "@nestjs/platform-express/*": ["apps/api/node_modules/@nestjs/platform-express/*"],
+      "@nestjs/testing": ["apps/api/node_modules/@nestjs/testing"],
+      "@nestjs/testing/*": ["apps/api/node_modules/@nestjs/testing/*"]
+    }
+  },
+  "include": ["tests/**/*.ts", "prisma/**/*.ts", "scripts/**/*.ts", "apps/api/src/**/*.ts"],
+  "exclude": ["node_modules", "apps/**/dist"]
+}

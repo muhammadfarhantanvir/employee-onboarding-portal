@@ -1,0 +1,8 @@
+// tests/integration/templates.integration.spec.ts
+import { endpointCatalog } from '../helpers/api-catalog';
+import { runEndpointContractSuite } from '../helpers/integration-suite';
+
+runEndpointContractSuite(
+  'Templates integration endpoints',
+  endpointCatalog.filter((endpoint) => endpoint.url.startsWith('/api/templates')),
+);
