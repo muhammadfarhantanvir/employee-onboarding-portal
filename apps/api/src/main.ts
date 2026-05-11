@@ -1,6 +1,7 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { buildSwaggerComponentsSchemas } from './common/swagger-component-registry';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -32,10 +33,21 @@ async function bootstrap(): Promise<void> {
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig, {
     ignoreGlobalPrefix: false,
   });
+  swaggerDocument.components = swaggerDocument.components ?? {};
+  swaggerDocument.components.schemas = {
+    ...buildSwaggerComponentsSchemas(),
+    ...(swaggerDocument.components.schemas ?? {}),
+  };
   SwaggerModule.setup('api/docs', app, swaggerDocument, {
     swaggerOptions: {
       persistAuthorization: true,
       displayRequestDuration: true,
+      docExpansion: 'list',
+      // NOTE: defaultModelsExpandDepth: -1 hides the bottom "Schemas" section in Swagger UI 5
+      // (see https://github.com/swagger-api/swagger-ui/issues/9724). Use a positive depth to list models.
+      defaultModelsExpandDepth: 2,
+      defaultModelExpandDepth: 2,
+      deepLinking: true,
     },
   });
 
