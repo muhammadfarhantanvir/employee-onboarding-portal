@@ -44,7 +44,8 @@
     "k6:run": "npm run test:load",
     "zap:baseline": "npm run test:security:zap",
     "stryker": "npm run test:mutation",
-    "ci:tests": "npm run test:all:fast"
+    "ci:tests": "npm run test:all:fast",
+    "observability:dashboards": "node scripts/generate-observability-dashboards.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",

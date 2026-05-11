@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { Resend } from 'resend';
 import { randomUUID } from 'crypto';
+import { MetricsService } from '../observability/metrics.service';
 import { EmailLog, EmailStatus } from './notifications.types';
 import {
   hireInviteHtml,
@@ -50,7 +51,7 @@ export class EmailService {
   private readonly fromAddress: string;
   private readonly isConfigured: boolean;
 
-  constructor() {
+  constructor(@Optional() private readonly metricsService?: MetricsService) {
     const apiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
     const fromName = process.env.RESEND_FROM_NAME ?? 'Employee Onboarding Portal';
@@ -305,6 +306,7 @@ export class EmailService {
     this.log.set(logEntry.id, updated);
 
     if (result.success) {
+      this.metricsService?.recordBullMqEmailJobSent(opts.companyId, opts.template);
       this.logger.log(
         `[EMAIL SENT] template=${opts.template} to=${opts.to} id=${result.providerId}`,
       );

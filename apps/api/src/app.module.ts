@@ -18,6 +18,8 @@ import { WorkspaceModule } from './workspace/workspace.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/rbac/permissions.guard';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
+import { ObservabilityModule } from './observability/observability.module';
+import { HttpMetricsInterceptor } from './observability/http-metrics.interceptor';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
       },
     }),
     WorkspaceModule,
+    ObservabilityModule,
     AuthModule,
     CompanyModule,
     HiresModule,
@@ -56,6 +59,10 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditLogInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpMetricsInterceptor,
     },
   ],
 })

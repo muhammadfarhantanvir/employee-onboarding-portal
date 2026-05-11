@@ -4,8 +4,10 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { MetricsService } from '../observability/metrics.service';
 import {
   AcknowledgeDocumentInput,
   AcknowledgementResponse,
@@ -33,7 +35,7 @@ export class DocumentsService {
   private readonly docs = new Map<string, Map<string, Document>>();
   private readonly acks = new Map<string, DocumentAcknowledgement[]>();
 
-  constructor() {
+  constructor(@Optional() private readonly metricsService?: MetricsService) {
     this.seedDemoDocuments();
   }
 
@@ -123,6 +125,7 @@ export class DocumentsService {
     };
 
     this.companyStore(companyId).set(doc.id, doc);
+    this.metricsService?.recordDocumentUploaded(companyId, category);
     return doc;
   }
 

@@ -3,9 +3,11 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { TemplatesService } from '../templates/templates.service';
+import { MetricsService } from '../observability/metrics.service';
 import { PHASES, Phase, ASSIGNED_ROLES, AssignedRole } from '../templates/templates.types';
 import {
   CreateHireInput,
@@ -29,8 +31,12 @@ export class HiresService {
   /** hireId → taskId → HireTask */
   private readonly tasks = new Map<string, Map<string, HireTask>>();
 
-  constructor(private readonly templatesService: TemplatesService) {
+  constructor(
+    private readonly templatesService: TemplatesService,
+    @Optional() private readonly metricsService?: MetricsService,
+  ) {
     this.seedDemoHires();
+    this.syncBusinessMetrics();
   }
 
   // ── Hires ──────────────────────────────────────────────────────
@@ -113,6 +119,8 @@ export class HiresService {
       this.instantiateTasksFromTemplate(hire, input.templateId, companyId);
     }
 
+    this.metricsService?.recordHireInviteSent(companyId);
+    this.syncBusinessMetrics(companyId);
     return this.getHire(companyId, hire.id);
   }
 
@@ -167,6 +175,7 @@ export class HiresService {
     };
 
     this.companyHires(companyId).set(hireId, updated);
+    this.syncBusinessMetrics(companyId);
     return this.getHire(companyId, hireId);
   }
 
@@ -199,6 +208,7 @@ export class HiresService {
       throw new ConflictException('Hire has already completed onboarding');
     }
     // In production: trigger email service here
+    this.metricsService?.recordHireInviteSent(companyId);
     return { success: true, message: `Invite resent to ${hire.email}` };
   }
 
@@ -259,6 +269,7 @@ export class HiresService {
     };
 
     this.hireTaskStore(hireId).set(taskId, updated);
+    this.metricsService?.recordTaskCompleted(companyId);
     this.recalculateCompletion(companyId, hireId);
     return updated;
   }
@@ -376,6 +387,9 @@ export class HiresService {
     };
 
     this.hireTaskStore(hireId).set(taskId, updated);
+    if (task.status !== 'completed' && updated.status === 'completed') {
+      this.metricsService?.recordTaskCompleted(companyId);
+    }
     this.recalculateCompletion(companyId, hireId);
     return updated;
   }
@@ -497,6 +511,28 @@ export class HiresService {
     };
 
     this.companyHires(companyId).set(hireId, updated);
+    this.syncBusinessMetrics(companyId);
+  }
+
+  private syncBusinessMetrics(companyId?: string): void {
+    if (!this.metricsService) {
+      return;
+    }
+
+    const companyIds = companyId ? [companyId] : Array.from(this.hires.keys());
+    for (const id of companyIds) {
+      const hires = Array.from(this.companyHires(id).values());
+      const active = hires.filter(
+        (hire) => hire.status !== 'completed' && hire.status !== 'cancelled',
+      ).length;
+      const eligible = hires.filter((hire) => hire.status !== 'cancelled');
+      const completed = eligible.filter((hire) => hire.status === 'completed').length;
+      const completionRate =
+        eligible.length === 0 ? 0 : Math.round((completed / eligible.length) * 100);
+
+      this.metricsService.setActiveHires(id, active);
+      this.metricsService.setOnboardingCompletionRate(id, completionRate);
+    }
   }
 
   /**

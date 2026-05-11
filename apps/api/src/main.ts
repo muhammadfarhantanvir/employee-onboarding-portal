@@ -1,10 +1,15 @@
+import './tracing';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { buildSwaggerComponentsSchemas } from './common/swagger-component-registry';
+import { MetricsService } from './observability/metrics.service';
+import { createPinoNestLogger } from './observability/pino-logger';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: createPinoNestLogger(),
+  });
   app.setGlobalPrefix('api');
 
   app.enableCors({
@@ -52,6 +57,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const port = process.env.PORT ? Number(process.env.PORT) : 3001;
+  app.get(MetricsService, { strict: false }).trackHttpServer(app.getHttpServer());
   await app.listen(port);
 }
 

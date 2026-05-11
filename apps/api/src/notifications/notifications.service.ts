@@ -1,5 +1,12 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  Optional,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { MetricsService } from '../observability/metrics.service';
 import {
   CreateNotificationInput,
   EmailLog,
@@ -22,8 +29,9 @@ export class NotificationsService {
   /** companyId → WorkflowJob[] */
   private readonly jobs = new Map<string, WorkflowJob[]>();
 
-  constructor() {
+  constructor(@Optional() private readonly metricsService?: MetricsService) {
     this.seedDemoNotifications();
+    this.syncWorkflowQueueDepth();
   }
 
   // ── Notifications ──────────────────────────────────────────────
@@ -140,6 +148,7 @@ export class NotificationsService {
       `[JOB SCHEDULED] type=${type} companyId=${companyId} scheduledAt=${job.scheduledAt}`,
     );
 
+    this.syncWorkflowQueueDepth(companyId);
     return job;
   }
 
@@ -178,6 +187,7 @@ export class NotificationsService {
     }
 
     list[idx] = { ...job, status: 'cancelled' };
+    this.syncWorkflowQueueDepth(companyId);
     return list[idx];
   }
 
@@ -198,6 +208,7 @@ export class NotificationsService {
       failedAt: null,
       lastError: null,
     };
+    this.syncWorkflowQueueDepth(companyId);
     return list[idx];
   }
 
@@ -213,6 +224,7 @@ export class NotificationsService {
       startedAt: new Date().toISOString(),
       attempts: list[idx].attempts + 1,
     };
+    this.syncWorkflowQueueDepth(companyId);
     return list[idx];
   }
 
@@ -227,6 +239,7 @@ export class NotificationsService {
       status: 'completed',
       completedAt: new Date().toISOString(),
     };
+    this.syncWorkflowQueueDepth(companyId);
     return list[idx];
   }
 
@@ -247,6 +260,7 @@ export class NotificationsService {
         ? job.scheduledAt
         : new Date(Date.now() + 5 * 60 * 1000).toISOString(), // retry in 5 min
     };
+    this.syncWorkflowQueueDepth(companyId);
     return list[idx];
   }
 
@@ -265,6 +279,20 @@ export class NotificationsService {
       this.jobs.set(companyId, []);
     }
     return this.jobs.get(companyId)!;
+  }
+
+  private syncWorkflowQueueDepth(companyId?: string): void {
+    if (!this.metricsService) {
+      return;
+    }
+
+    const companyIds = companyId ? [companyId] : Array.from(this.jobs.keys());
+    const waiting = companyIds.reduce(
+      (total, id) =>
+        total + this.companyJobs(id).filter((job) => job.status === 'pending').length,
+      0,
+    );
+    this.metricsService.setBullMqQueueDepth('workflow', waiting);
   }
 
   // ── Demo seed ──────────────────────────────────────────────────

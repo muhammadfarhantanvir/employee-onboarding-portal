@@ -1,5 +1,6 @@
 // tests/load/k6-master.js
 import { login } from './helpers/auth.js';
+import { Counter } from 'k6/metrics';
 import smokeDefault, { options as smokeOptions } from './scenarios/smoke.js';
 import loadDefault, { options as loadOptions } from './scenarios/load.js';
 import stressDefault, { options as stressOptions } from './scenarios/stress.js';
@@ -20,7 +21,9 @@ const scenarios = {
   endurance: { fn: enduranceDefault, options: enduranceOptions },
 };
 
-const selected = scenarios[__ENV.SCENARIO || 'load'];
+const selectedName = __ENV.SCENARIO || 'load';
+const selected = scenarios[selectedName];
+const scenarioPhase = new Counter('scenario_phase');
 
 if (!selected) {
   throw new Error(`Unknown k6 scenario "${__ENV.SCENARIO}". Valid scenarios: ${Object.keys(scenarios).join(', ')}`);
@@ -33,5 +36,9 @@ export function setup() {
 }
 
 export default function (data) {
+  scenarioPhase.add(1, {
+    scenario: selectedName,
+    phase: __ENV.PHASE || selectedName,
+  });
   selected.fn(data);
 }

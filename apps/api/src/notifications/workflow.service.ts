@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { EmailService } from './email.service';
+import { MetricsService } from '../observability/metrics.service';
 import {
   DocumentEventPayload,
   HireEventPayload,
@@ -30,6 +31,7 @@ export class WorkflowService {
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly emailService: EmailService,
+    @Optional() private readonly metricsService?: MetricsService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════
@@ -436,15 +438,26 @@ export class WorkflowService {
 
     for (const job of dueJobs) {
       this.notificationsService.markJobRunning(job.id, companyId);
+      const jobStartedAt = process.hrtime.bigint();
       try {
         await this.executeJob(job.type, job.payload, companyId);
         this.notificationsService.markJobCompleted(job.id, companyId);
+        this.metricsService?.recordBullMqJobCompleted('workflow', job.type);
         processed++;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.notificationsService.markJobFailed(job.id, companyId, msg);
+        this.metricsService?.recordBullMqJobFailed('workflow', job.type);
         failed++;
         this.logger.error(`[JOB FAILED] jobId=${job.id} type=${job.type} error=${msg}`);
+      } finally {
+        const durationSeconds =
+          Number(process.hrtime.bigint() - jobStartedAt) / 1_000_000_000;
+        this.metricsService?.observeBullMqJobDuration(
+          'workflow',
+          job.type,
+          durationSeconds,
+        );
       }
     }
 
