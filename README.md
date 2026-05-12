@@ -204,10 +204,6 @@ Purpose-built for the German market with data protection built in from the start
 
 ---
 
-### Feature 12 — Notification Centre & Email System
-
----
-
 ## User Roles & Permissions
 
 ```
