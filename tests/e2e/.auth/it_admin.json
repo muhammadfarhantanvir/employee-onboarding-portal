@@ -1,0 +1,26 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "onboarding_session",
+          "value": "{\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDQ0NDQ0NC00NDQ0LTQ0NDQtODQ0NC00NDQ0NDQ0NDQ0NDQiLCJlbWFpbCI6Iml0QGRlbW8tY29tcGFueS5jb20iLCJyb2xlIjoiaXRfYWRtaW4iLCJjb21wYW55X2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiY29tcGFueUlkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiY29tcGFueV9zbHVnIjoiZGVtby1jb21wYW55IiwiY29tcGFueVNsdWciOiJkZW1vLWNvbXBhbnkiLCJpYXQiOjE3Nzg2MTQwMjUsImV4cCI6MTc3ODYxNDkyNX0.rfUIXq9QtFUr8B1z3vy54CQahWHvFcfPi2xWIZH_Ww4\",\"refreshToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDQ0NDQ0NC00NDQ0LTQ0NDQtODQ0NC00NDQ0NDQ0NDQ0NDQiLCJjb21wYW55X2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwianRpIjoiNjliODVlNWEtMWYzYi00YTFlLWE4MmMtNjA3NzYzMmMzZjgwIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3Nzg2MTQwMjUsImV4cCI6MTc3OTIxODgyNX0.AhI_AXZdi9A58iimz4fVVZJqR9bUYPwvJBp2XA44pnw\",\"companySlug\":\"demo-company\",\"userId\":\"44444444-4444-4444-8444-444444444444\",\"userEmail\":\"it@demo-company.com\",\"userFullName\":\"Ivan IT\",\"userRole\":\"it_admin\"}"
+        },
+        {
+          "name": "accessToken",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDQ0NDQ0NC00NDQ0LTQ0NDQtODQ0NC00NDQ0NDQ0NDQ0NDQiLCJlbWFpbCI6Iml0QGRlbW8tY29tcGFueS5jb20iLCJyb2xlIjoiaXRfYWRtaW4iLCJjb21wYW55X2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiY29tcGFueUlkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwiY29tcGFueV9zbHVnIjoiZGVtby1jb21wYW55IiwiY29tcGFueVNsdWciOiJkZW1vLWNvbXBhbnkiLCJpYXQiOjE3Nzg2MTQwMjUsImV4cCI6MTc3ODYxNDkyNX0.rfUIXq9QtFUr8B1z3vy54CQahWHvFcfPi2xWIZH_Ww4"
+        },
+        {
+          "name": "refreshToken",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDQ0NDQ0NC00NDQ0LTQ0NDQtODQ0NC00NDQ0NDQ0NDQ0NDQiLCJjb21wYW55X2lkIjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwianRpIjoiNjliODVlNWEtMWYzYi00YTFlLWE4MmMtNjA3NzYzMmMzZjgwIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3Nzg2MTQwMjUsImV4cCI6MTc3OTIxODgyNX0.AhI_AXZdi9A58iimz4fVVZJqR9bUYPwvJBp2XA44pnw"
+        },
+        {
+          "name": "userRole",
+          "value": "it_admin"
+        }
+      ]
+    }
+  ]
+}

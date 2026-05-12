@@ -9,27 +9,22 @@
 ![CI/CD](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?style=flat-square&logo=github-actions)
 
 ---
+## Project Snapshots
 
-## Table of Contents
+### API Documentation
+![API Swagger](project_snapshot/api_swagger.png)
 
-- [Project Overview](#project-overview)
-- [Live Demo](#live-demo)
-- [Tech Stack — Full Breakdown](#tech-stack--full-breakdown)
-- [Features](#features)
-- [User Roles & Permissions](#user-roles--permissions)
-- [System Architecture](#system-architecture)
-- [Database Schema](#database-schema)
-- [API Design](#api-design)
-- [Supabase Configuration](#supabase-configuration)
-- [Docker Setup](#docker-setup)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Folder Structure](#folder-structure)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Deployment](#deployment)
-- [CV Talking Points](#cv-talking-points)
-- [Roadmap](#roadmap)
+### Database Schema
+![Database Schema](project_snapshot/database.png)
 
+### Monitoring Dashboard
+![Grafana Dashboard](project_snapshot/grafana.png)
+
+### HR Portal
+![HR Interface](project_snapshot/hr.png)
+
+### Manager Dashboard
+![Manager Interface](project_snapshot/manager.png)
 ---
 
 ## Project Overview
@@ -53,23 +48,6 @@ German Mittelstand companies still onboard employees via email threads and print
 
 ---
 
-## Live Demo
-
-| Environment | URL |
-|-------------|-----|
-| Production app | `https://onboarding-portal.yourdomain.com` |
-| API docs (Swagger) | `https://api.onboarding-portal.yourdomain.com/docs` |
-
-**Demo accounts (pre-seeded):**
-
-| Role | Email | Password |
-|------|-------|----------|
-| HR Admin | `hr@demo-company.com` | `Demo1234!` |
-| Manager | `manager@demo-company.com` | `Demo1234!` |
-| New Hire | `newhire@demo-company.com` | `Demo1234!` |
-| IT Admin | `it@demo-company.com` | `Demo1234!` |
-
----
 
 ## Tech Stack — Full Breakdown
 
@@ -163,41 +141,11 @@ Supabase gives you Auth, Storage, and Realtime out of the box — reducing infra
 
 Each company that signs up gets an isolated workspace. All data is partitioned by `company_id` enforced via Supabase RLS policies. No company can ever read, write, or even discover another company's data.
 
-- Company registration with domain verification
-- Subdomain routing: `acme.onboarding-portal.com`
-- Company settings: logo, brand colour, timezone, locale (de-DE / en-GB)
-- Billing tier: Free (5 active hires) / Pro (unlimited)
-- Company admin can transfer ownership
-
-**Technical implementation:** Every table has a `company_id UUID NOT NULL` column. Supabase RLS policy: `USING (company_id = auth.jwt() ->> 'company_id')`. NestJS `CompanyGuard` validates the JWT claim matches the URL parameter.
-
 ---
 
 ### Feature 2 — Role-based Access Control (RBAC)
 
 Five roles with granular permissions enforced at both the API (NestJS Guards) and database (Supabase RLS) levels.
-
-| Permission | HR Admin | Manager | IT Admin | New Hire | Viewer |
-|-----------|----------|---------|----------|----------|--------|
-| Create onboarding plans | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Invite new hires | ✅ | ❌ | ❌ | ❌ | ❌ |
-| View all hires | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Complete own tasks | ❌ | ❌ | ✅ | ✅ | ❌ |
-| Approve onboarding | ❌ | ✅ | ❌ | ❌ | ❌ |
-| View analytics | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Manage documents | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Upload own documents | ❌ | ❌ | ❌ | ✅ | ❌ |
-
-**Technical implementation:**
-```typescript
-// NestJS guard example
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.HR_ADMIN, Role.MANAGER)
-@Get('hires')
-findAllHires(@CompanyId() companyId: string) {
-  return this.hiresService.findAll(companyId);
-}
-```
 
 ---
 
@@ -205,29 +153,11 @@ findAllHires(@CompanyId() companyId: string) {
 
 HR admins create reusable onboarding plan templates per role (e.g. "Software Engineer", "Sales Rep", "Operations Manager"). Each template contains ordered tasks across configurable phases.
 
-- Template library with role-based defaults
-- Phases: Pre-boarding → Week 1 → Month 1 → Month 3
-- Task types: `checkbox` | `document_upload` | `form_submission` | `acknowledgement` | `meeting`
-- Due date rules: relative to start date (e.g. "Day -3", "Day 1", "Day 30")
-- Assign tasks to: new hire / IT admin / manager / HR admin
-- Drag-and-drop task reordering with @dnd-kit
-- Duplicate and customise templates per hire
-
 ---
 
 ### Feature 4 — New Hire Onboarding Journey
 
 When a new hire is invited, an onboarding plan is instantiated from the template. The new hire sees a personalised dashboard showing their progress, upcoming tasks, and deadlines.
-
-- Clean, welcoming new hire portal (separate from HR dashboard)
-- Progress bar: overall completion percentage
-- Phase-by-phase task list with clear status indicators
-- In-app notifications for newly assigned tasks
-- Task detail view with rich text instructions (TipTap)
-- One-click task completion for checkbox tasks
-- File upload for document tasks (drag-and-drop or click)
-- E-sign acknowledgement: read document → tick to confirm → timestamp recorded
-- Mobile-responsive (new hires often complete tasks on phones)
 
 ---
 
@@ -235,38 +165,11 @@ When a new hire is invited, an onboarding plan is instantiated from the template
 
 Secure, company-partitioned document storage powered by Supabase Storage with signed URLs for time-limited access.
 
-- HR uploads company documents: handbook, policies, NDA, contracts
-- Documents categorised: `policy` | `contract` | `training` | `form` | `certificate`
-- Version control: upload new version, keep history, set active version
-- New hire uploads personal documents: ID copy, tax form (Lohnsteuerkarte), bank details
-- Documents marked: `pending_review` → `approved` | `rejected`
-- Supabase Storage signed URLs expire in 60 minutes — no direct public access
-- HR can download all documents for a hire as a ZIP archive
-- GDPR compliance: data retention policy per document category
-- Virus scan on upload via ClamAV sidecar (Docker)
-
 ---
 
 ### Feature 6 — Automated Workflow & Reminders
 
 BullMQ job queues handle all async automation — email reminders, IT notifications, deadline escalations, and report generation.
-
-**Automated triggers:**
-
-| Event | Action |
-|-------|--------|
-| New hire created | Email invite sent to hire + welcome email |
-| New hire created | IT admin notified with equipment checklist |
-| New hire created | Manager notified with approval tasks |
-| Task due in 24h | Reminder email to assigned person |
-| Task overdue | Escalation email to HR admin |
-| Onboarding completed | Congratulations email + manager notification |
-| Document uploaded | HR admin notified for review |
-| Document rejected | New hire notified with rejection reason |
-| Day 30 reached | 30-day check-in survey triggered |
-| Day 90 reached | 90-day review meeting task created |
-
-**Technical implementation:** BullMQ `repeat` jobs check due dates every hour. `DelayedJob` sends notifications at the exact right time. Dead-letter queue captures failed sends for manual retry.
 
 ---
 
@@ -274,26 +177,11 @@ BullMQ job queues handle all async automation — email reminders, IT notificati
 
 When HR creates a new hire, the IT admin team receives an automatic task list to provision the new employee's access and equipment.
 
-- Auto-generated IT checklist from company's IT template
-- Tasks: laptop provisioning, email creation, Slack invite, GitHub access, VPN credentials
-- IT admin marks tasks complete with optional notes
-- Status visible to HR admin in real time via Supabase Realtime
-- Equipment serial numbers and asset tags recorded per hire
-- IT checklist completion blocks "onboarding complete" status
-
 ---
 
 ### Feature 8 — Manager Approval Workflow
 
 Managers have a structured review and approval flow that doesn't require HR involvement.
-
-- Manager dashboard: all direct reports in onboarding
-- View hire's task progress, uploaded documents, and completion percentage
-- Add private manager notes (not visible to hire)
-- Approve individual phases: "Week 1 approved"
-- Final onboarding approval: manager signs off → HR notified
-- 30-day and 90-day check-in meeting tasks assigned to manager
-- Manager can request document re-upload with reason
 
 ---
 
@@ -301,27 +189,12 @@ Managers have a structured review and approval flow that doesn't require HR invo
 
 The HR admin dashboard shows the live state of all active onboardings, updated in real time via Supabase Realtime subscriptions.
 
-- Active onboardings table: hire name, role, start date, progress %, days remaining
-- Status filters: on-track / at-risk (task overdue) / blocked (document rejected)
-- Drill-down into any hire's full onboarding detail
-- Live progress bar updates when hire completes a task (no page refresh)
-- Overdue task alerts with one-click reminder send
-- Document review queue: pending uploads awaiting HR approval
-
 ---
 
 ### Feature 10 — Analytics & Reporting
 
 Aggregate HR analytics to understand onboarding performance over time.
 
-- Completion rate by department / role / hire cohort
-- Average time-to-complete by phase
-- Most commonly overdue tasks (identify bottlenecks)
-- Document rejection rate
-- IT provisioning time (from hire creation to IT checklist done)
-- Monthly new hire volume chart
-- Export: CSV data export, PDF summary report per hire
-- **Recharts** renders all charts — line, bar, and donut
 
 ---
 
@@ -329,24 +202,9 @@ Aggregate HR analytics to understand onboarding performance over time.
 
 Purpose-built for the German market with data protection built in from the start.
 
-- Data retention policy per document category (configurable, e.g. 7 years for contracts)
-- Right to erasure: HR can anonymise a departed employee's data
-- Data processing log: every document access recorded with user + timestamp
-- Cookie consent banner (Cookiebot-compatible)
-- Privacy policy version tracking: new hires acknowledge each version
-- Data export: hire can request all their data as a JSON/ZIP package
-- Supabase RLS ensures cross-tenant data access is impossible at DB level
-
 ---
 
 ### Feature 12 — Notification Centre & Email System
-
-- In-app notification bell with unread count
-- Notification types: task assigned, task overdue, document reviewed, approval needed
-- Mark as read / mark all as read
-- Email notifications via **Resend** with company-branded templates
-- Email preferences: daily digest or instant notifications
-- Notification log in HR admin settings (audit trail)
 
 ---
 
@@ -432,223 +290,6 @@ Company (Tenant)
 │  VirusScanWorker    │◄── ClamAV sidecar
 └─────────────────────┘
 ```
-
-## Docker Setup
-
-### `docker-compose.yml` (development)
-
-```yaml
-version: '3.8'
-
-services:
-  api:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=redis://redis:6379
-    volumes:
-      - ./apps/api:/app
-      - /app/node_modules
-    depends_on:
-      redis:
-        condition: service_healthy
-    command: npm run start:dev
-
-  worker:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile.dev
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=redis://redis:6379
-    volumes:
-      - ./apps/api:/app
-      - /app/node_modules
-    depends_on:
-      - redis
-    command: npm run worker:dev
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  clamav:
-    image: clamav/clamav:stable
-    ports:
-      - "3310:3310"
-    volumes:
-      - clamav_data:/var/lib/clamav
-
-volumes:
-  redis_data:
-  clamav_data:
-```
-
-### `Dockerfile` (NestJS production — multi-stage)
-
-```dockerfile
-# Stage 1: Build
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production && npm ci
-COPY . .
-RUN npm run build
-
-# Stage 2: Production
-FROM node:20-alpine AS production
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-EXPOSE 3001
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
-  CMD wget -qO- http://localhost:3001/health || exit 1
-USER node
-CMD ["node", "dist/main"]
-```
-
----
-
-## CI/CD Pipeline
-
-### `.github/workflows/ci.yml`
-
-```yaml
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-jobs:
-  # ─── Lint & Type Check ─────────────────────────────────
-  lint:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run type-check
-
-  # ─── Unit & Integration Tests ──────────────────────────
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
-    needs: lint
-    services:
-      redis:
-        image: redis:7-alpine
-        ports: ['6379:6379']
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run test:cov
-        env:
-          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret
-      - uses: codecov/codecov-action@v3
-
-  # ─── E2E Tests ─────────────────────────────────────────
-  e2e:
-    name: E2E Tests (Playwright)
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npx playwright install --with-deps
-      - run: npm run test:e2e
-        env:
-          BASE_URL: http://localhost:3000
-          API_URL: http://localhost:3001
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-
-  # ─── Build Docker Image ────────────────────────────────
-  build:
-    name: Build & Push Docker Image
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v5
-        with:
-          context: ./apps/api
-          push: true
-          tags: ghcr.io/${{ github.repository }}/api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ─── Deploy ────────────────────────────────────────────
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [build, e2e]
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy API to Railway
-        run: |
-          npm install -g @railway/cli
-          railway up --service api
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      - name: Deploy Frontend to Vercel
-        run: |
-          npm install -g vercel
-          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
-      - name: Run DB migrations
-        run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - name: Notify Sentry of new release
-        run: npx @sentry/cli releases new ${{ github.sha }}
-```
-
----
-
 ## Folder Structure
 
 ```
@@ -782,87 +423,6 @@ employee-onboarding-portal/
 └── README.md
 ```
 
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- Docker & Docker Compose
-- Supabase account (free tier works)
-- Resend account (free tier: 3,000 emails/month)
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/yourusername/employee-onboarding-portal.git
-cd employee-onboarding-portal
-npm install   # installs root + all workspace dependencies
-```
-
-### 2. Set up Supabase
-
-```bash
-# Install Supabase CLI
-npm install -g supabase
-
-# Login and link project
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-
-# Push database schema
-supabase db push
-
-# Enable realtime for required tables
-# In Supabase dashboard: Database → Replication → enable hire_tasks, notifications
-```
-
-### 3. Configure environment variables
-
-```bash
-cp .env.example .env
-# Fill in all values — see Environment Variables section
-```
-
-### 4. Start Docker services
-
-```bash
-docker-compose up -d
-# Starts: Redis, ClamAV
-```
-
-### 5. Run database migrations
-
-```bash
-cd apps/api
-npx prisma migrate dev
-npx prisma db seed    # seeds demo company, users, and template
-```
-
-### 6. Start development servers
-
-```bash
-# Terminal 1 — NestJS API
-cd apps/api && npm run start:dev
-
-# Terminal 2 — BullMQ Worker
-cd apps/api && npm run worker:dev
-
-# Terminal 3 — Next.js frontend
-cd apps/web && npm run dev
-```
-
-### 7. Open the app
-
-Navigate to `http://localhost:3000`. Log in with the seeded HR admin account:
-- Email: `hr@demo.com`
-- Password: `Demo1234!`
-
-
-
----
-
 
 
 ### Architecture
@@ -884,15 +444,5 @@ Navigate to `http://localhost:3000`. Log in with the seeded HR admin account:
 - **Database migrations** — Prisma migrations run automatically in CI/CD. No manual schema changes in production.
 - **API documentation** — Swagger docs auto-generated from NestJS decorators. Always in sync with the code.
 - **Audit logging** — Every state change logged with user, timestamp, and IP. Required for enterprise clients.
-
-
-
-
-
-
-
----
-
-*Built with Next.js 14 · NestJS · Supabase · Docker · GitHub Actions*
 
 *Targeting the German B2B SaaS market*
